@@ -2,6 +2,7 @@ from dash import Dash, html
 from dash_canvas import DashCanvas
 
 app = Dash(__name__)
+server = app.server
 app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div([
@@ -12,4 +13,3 @@ app.layout = html.Div([
 
 if __name__ == '__main__':
     app.run(debug=True)
-    server = app.server

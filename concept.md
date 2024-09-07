@@ -1,3 +1,4 @@
+# Dynamics_A1130-II
 Chapter 12: Kinematics of a particle
 - projectile motion simulator, themed around helping Santa delivering presents
 - erratic motion simulator, constructing state variable plots (position, velocity and acceleration) to live input in real time.

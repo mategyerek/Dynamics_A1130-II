@@ -1,7 +1,16 @@
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(1000, 600);
+  x = 0;
+  y = 0;
+  vx = 100;
+  vy = 0;
+  dt = 0.01;
+  img = loadImage("image.png")
 }
 
 function draw() {
-  background(frameCount%255);
+  background(0)
+  x += vx*dt;
+  y += vy*dt;
+  image(img, x, y, 200, 200)
 }

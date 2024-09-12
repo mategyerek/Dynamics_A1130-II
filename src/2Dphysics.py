@@ -9,7 +9,7 @@ class DynObject2DLog:
         self.data = np.zeros((9,self.bufferSize),dtype=np.float64) #posX,posY,velX,velY,accX,accY,aPos,aVel,aAcc
 
     def update(self):
-        
+
         self.logCount += 1
 
         self.data[0:2,self.logCount] = self.obj.pos
@@ -102,6 +102,7 @@ class DynObject2D:
         self.aVel += self.aAcc*dt
         
         self.log.update()
+
 
 if __name__ == "__main__":
     testObj = DynObject2D()

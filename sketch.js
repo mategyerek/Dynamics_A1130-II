@@ -1,11 +1,13 @@
+
+
 function setup() {
   createCanvas(1000, 600);
-  x = 0;
-  y = 0;
-  vx = 100;
-  vy = 0;
-  dt = 0.01;
   img = loadImage("image.png")
+  let x = 0;
+let y = 0;
+let vx = 0;
+let vy = 0;
+let dt = 0.01
 }
 
 function draw() {

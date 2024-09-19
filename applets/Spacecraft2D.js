@@ -1,7 +1,8 @@
 let x = 0, y = 0; // canvas position
 let absX = 0, absY = 0; // absolute position
 let speedX = 0, speedY = 0; 
-let dt = 0.01
+let acceleration = 100;
+let dt;
 let scrWidth = 1000;
 let scrHeight = 600;
 let imageScale = 0.4;
@@ -41,29 +42,55 @@ function draw() {
 
     imageMode(CENTER);
 
+    dt = deltaTime/1000;
+
     //handle keyboard events
     if (keyIsDown(65) && keyIsDown(68)) {
         image(lander, x, y);
     } else if (keyIsDown(65)) { // 'A' key
         if (keyIsDown(83)) { // 'S' key
             image(landerLeftDown, x, y);
+            speedX -= acceleration*dt;
+            speedY += acceleration*dt;
+            absX -= 0.5*acceleration*Math.pow(dt,2);
+            absY += 0.5*acceleration*Math.pow(dt,2);
         } else if (keyIsDown(87)) { // 'W' key
             image(landerLeftUp, x, y);
+            speedX -= acceleration*dt;
+            speedY -= acceleration*dt;
+            absX -= 0.5*acceleration*Math.pow(dt,2);
+            absY -= 0.5*acceleration*Math.pow(dt,2);
         } else if (!keyIsDown(68)) { // 'D' key
             image(landerLeft, x, y);
+            speedX -= acceleration*dt;
+            absX -= 0.5*acceleration*Math.pow(dt,2);
         }
     } else if (keyIsDown(68)) { // 'D' key
         if (keyIsDown(83)) { // 'S' key
             image(landerRightDown, x, y);
+            speedX += acceleration*dt;
+            speedY += acceleration*dt;
+            absX += 0.5*acceleration*Math.pow(dt,2);
+            absY += 0.5*acceleration*Math.pow(dt,2);
         } else if (keyIsDown(87)) { // 'W' key
             image(landerRightUp, x, y);
+            speedX += acceleration*dt;
+            speedY -= acceleration*dt;
+            absX += 0.5*acceleration*Math.pow(dt,2);
+            absY -= 0.5*acceleration*Math.pow(dt,2);
         } else if (!keyIsDown(65)) { // 'A' key
             image(landerRight, x, y);
+            speedX += acceleration*dt;
+            absX += 0.5*acceleration*Math.pow(dt,2);
         }
     } else if (keyIsDown(83) && !keyIsDown(87)) { // 'S' key without 'W'
         image(landerDown, x, y);
+        speedY += acceleration*dt;
+        absY += 0.5*acceleration*Math.pow(dt,2);
     } else if (keyIsDown(87) && !keyIsDown(83)) { // 'W' key without 'S'
         image(landerUp, x, y);
+        speedY -= acceleration*dt;
+        absY -= 0.5*acceleration*Math.pow(dt,2);
     } else {
         image(lander, x, y);
     }
@@ -77,17 +104,15 @@ function draw() {
     fill("red");
     strokeWeight(5);
 
-    
-
-    // Move inward 5 pixels from the edge
-    translate(0, distanceToEdge - 5); // Translate along the Y-axis after rotation
+    translate(0,295);
 
     triangle(0,0,-10,-25,10,-25);
     line(0,-100,0,-25);
 
     pop();
 
-
+    absX += speedX*dt;
+    absY += speedX*dt;
 
     // check for distance between car and lander and render if close
     if (abs(absX-carX)<=1.5*scrWidth && abs(absY-carY)<=1.5*scrHeight) {
@@ -95,4 +120,6 @@ function draw() {
         cary = carY-absY;
         image(car, carx, cary);
     }
+    fill("white");
+    text(str(absX),-scrWidth/3,scrHeight/3);
 }

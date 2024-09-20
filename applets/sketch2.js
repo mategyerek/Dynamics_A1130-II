@@ -5,7 +5,7 @@ function setup() {
     vx = 0;
     vy = 0;
     dt = 0.01;
-    img = loadImage("image.png")
+    img = loadImage("graphics/lander.png")
   }
   
   function draw() {

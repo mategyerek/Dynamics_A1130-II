@@ -6,7 +6,7 @@ let dt;
 let scrWidth = 1000;
 let scrHeight = 600;
 let imageScale = 0.4;
-let carX = -69690, carY = 12450; // absolute position
+let carX = -1000, carY = 1000; // absolute position
 let carx, cary; // canvas position
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
 
@@ -96,23 +96,40 @@ function draw() {
     }
 
     // draw arrow pointing towards car
+
+    // draw arrow pointing towards car
     push();
-    let carVector = createVector(carX-absX,carY-absY);
+    //HERE - Add this section to draw the arrow inside the circle in the top-left corner
+    translate(-width/2 + 50, -height/2 + 50); // Move to top-left corner
+    stroke("lime");
+    strokeWeight(2);
+    noFill();
+    ellipse(0, 0, 80, 80); // Draw a circle with a diameter of 80 pixels
+
+    // Calculate vector to car and angle
+    let carVector = createVector(carX - absX, carY - absY);
     let heading = carVector.heading();
-    rotate(heading);
-    stroke("red");
-    fill("red");
-    strokeWeight(5);
 
-    translate(0,295);
-
-    triangle(0,0,-10,-25,10,-25);
-    line(0,-100,0,-25);
+    // Rotate the arrow to point towards the car
+    rotate(heading-HALF_PI);
+    stroke("lime");
+    fill("lime");
+    strokeWeight(3);
+    
+    // Draw the arrow inside the circle
+    line(0,0,0,0) // Move arrow within the circle
+    
+    // Draw arrow
+    line(0,30,-15,15);
+    line(0,30,15,15);
+    line(0, -30, 0, 30);
 
     pop();
 
+    // add linear term in position change
+
     absX += speedX*dt;
-    absY += speedX*dt;
+    absY += speedY*dt;
 
     // check for distance between car and lander and render if close
     if (abs(absX-carX)<=1.5*scrWidth && abs(absY-carY)<=1.5*scrHeight) {
@@ -120,6 +137,9 @@ function draw() {
         cary = carY-absY;
         image(car, carx, cary);
     }
+    
+    // text printing
     fill("white");
-    text(str(absX),-scrWidth/3,scrHeight/3);
+    text(str(absX-carX),-scrWidth/3,scrHeight/3);
+    text(str(absY-carY),-scrWidth/3,scrHeight/3+20)
 }

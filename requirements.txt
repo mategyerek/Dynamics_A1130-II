@@ -1,5 +1,0 @@
-dash==2.18.0
-dash_canvas==0.1.0
-gunicorn
-pandas
-dash-tools

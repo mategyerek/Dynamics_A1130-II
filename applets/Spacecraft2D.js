@@ -1,15 +1,19 @@
 let x = 0, y = 0; // canvas position
 let absX = 0, absY = 0; // absolute position
-let speedX = 0, speedY = 0; 
-let acceleration = 100;
-let dt;
-let scrWidth = 1000;
-let scrHeight = 600;
 let imageScale = 0.4;
 let carX = -1000, carY = 1000; // absolute position
 let carx, cary; // canvas position
+
+let speedX = 0, speedY = 0; 
+let acceleration = 100;
+let dt;
+
+let scrWidth = 1000;
+let scrHeight = 600;
+let spWidth = 400;
+
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
-let sidePanelWidth = 400;
+
 
 // SI plottables - 100 px = 1 m
 let posXSI = [];
@@ -23,8 +27,13 @@ let t = [];
 // colors
 let naviColor = "cyan";
 let velColor = "lime";
-let sidePanelColor = [20,24,62];
+let spColor = [20,24,62];
 let accColor = "red";
+let textColor = "white";
+
+//text settings
+let spMargin = 10;
+
 
 // Utility function to load and resize images with a callback
 function loadResizedImage(imgPath, scale, callback) {
@@ -46,10 +55,11 @@ function preload() {
     loadResizedImage("graphics/lander_rightdown.png", imageScale, (img) => landerRightDown = img);
     loadResizedImage("graphics/lander_leftdown.png", imageScale, (img) => landerLeftDown = img);
     loadResizedImage("graphics/car.png", imageScale/2, (img) => car = img);
+
 }
 
 function setup() {
-    createCanvas(scrWidth+sidePanelWidth,scrHeight);
+    createCanvas(scrWidth+spWidth,scrHeight);
     posXSI.push(absX/100);
     posYSI.push(absY/100);
     velXSI.push(speedX/100);
@@ -176,7 +186,7 @@ function draw() {
     translate(0,4);
     let speedVec = createVector(speedX,speedY);
     let heading = speedVec.heading();
-    let magn = speedVec.mag()/10; // scale of x10
+    let magn = speedVec.mag()/10; //scale x0.001
     rotate(heading-HALF_PI);
 
     line(x,y,x,magn);
@@ -206,7 +216,7 @@ function draw() {
         translate(0,4);
         let accVec = createVector(accXSI[accXSI.length-1],-accYSI[accXSI.length-1]);
         let heading = accVec.heading();
-        let magn = accVec.mag(); // scale of x1
+        let magn = accVec.mag()*10; //scale x0.1
         rotate(heading-HALF_PI);
     
         line(x,y,x,magn);
@@ -268,10 +278,32 @@ function draw() {
     // sidepanel
 
     push();
+
     translate(-scrWidth/2,-scrHeight/2);
-    fill(sidePanelColor);
-    stroke(sidePanelColor);
-    rect(scrWidth,0,sidePanelWidth,scrHeight);
+    fill(spColor);
+    stroke(spColor);
+    rect(scrWidth,0,spWidth,scrHeight);
+
+    translate(scrWidth,0);
+
+    noFill();
+    stroke(textColor);
+    rect(spMargin,spMargin,spWidth-2*spMargin,100,10,10,10,10);
+
+    textAlign(CENTER,TOP);
+    fill(textColor);
+
+    textSize(25);
+    text("Add new plot",spWidth/2,20);
+
+    textAlign(LEFT,BOTTOM);
+    textSize(15);
+    text("x-axis",2*spMargin,70);
+    text("y-axis",2*spMargin,100);
+
+    text();
+
     pop();
+
     
 }

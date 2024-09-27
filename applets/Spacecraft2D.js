@@ -8,7 +8,7 @@ let speedX = 0, speedY = 0;
 let acceleration = 100;
 let dt;
 
-let scrWidth = 1000;
+let scrWidth = 800;
 let scrHeight = 600;
 let spWidth = 400;
 
@@ -56,6 +56,7 @@ function preload() {
     loadResizedImage("graphics/lander_leftdown.png", imageScale, (img) => landerLeftDown = img);
     loadResizedImage("graphics/car.png", imageScale/2, (img) => car = img);
 
+    font = loadFont("fonts/Inter_18pt-ExtraLight.ttf");
 }
 
 function setup() {
@@ -67,11 +68,51 @@ function setup() {
     accXSI.push(0);
     accYSI.push(0);
     t.push(0);
+
+    //dropdowns
+    // x-axis dropdown
+    xDropdown = createSelect(false);
+
+    xDropdown.option("t");
+    xDropdown.option("x");
+    xDropdown.option("y");
+    xDropdown.option("absolute displacement");
+    xDropdown.option("distance covered");
+    xDropdown.option("v_x");
+    xDropdown.option("v_y");
+    xDropdown.option("speed");
+    xDropdown.option("a_x");
+    xDropdown.option("a_y");
+    xDropdown.option("absolute value of acceleration");
+
+    xDropdown.position(scrWidth+2*spMargin+50,spMargin+43);
+
+    // y-axis dropdown
+    yDropdown = createSelect(false);
+    
+    yDropdown.option("x");
+    yDropdown.option("y");
+    yDropdown.option("absolute displacement");
+    yDropdown.option("distance covered");
+    yDropdown.option("v_x");
+    yDropdown.option("v_y");
+    yDropdown.option("speed");
+    yDropdown.option("a_x");
+    yDropdown.option("a_y");
+    yDropdown.option("absolute value of acceleration");
+    yDropdown.option("t");
+    
+    yDropdown.position(scrWidth+2*spMargin+50,spMargin+73);
+
+    //create add graph button
+    addGraph = createButton("Add graph");
+    addGraph.size(0.25*spWidth,49);
+    addGraph.position(scrWidth+0.75*spWidth-2*spMargin,spMargin+43);
 }
+
   
 function draw() {
     background(0);
-
     translate(scrWidth/2,scrHeight/2); //translate origin to middle
 
     imageMode(CENTER);
@@ -292,18 +333,17 @@ function draw() {
 
     textAlign(CENTER,TOP);
     fill(textColor);
+    textFont(font);
 
     textSize(25);
-    text("Add new plot",spWidth/2,20);
+    text("Add new plot",spWidth/2,spMargin);
 
     textAlign(LEFT,BOTTOM);
     textSize(15);
     text("x-axis",2*spMargin,70);
     text("y-axis",2*spMargin,100);
 
-    text();
+
 
     pop();
-
-    
 }

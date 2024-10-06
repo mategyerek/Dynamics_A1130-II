@@ -43,6 +43,10 @@ function loadResizedImage(imgPath, scale, callback) {
     });
 }
 
+function drawAxis() {
+    
+}
+
 function preload() {
     // Load and resize images using a callback as loadImage is async
     loadResizedImage("graphics/lander.png", imageScale, (img) => lander = img);
@@ -299,7 +303,6 @@ function draw() {
     strokeWeight(3);
     
     // Draw the arrow inside the circle
-    line(0,0,0,0) // Move arrow within the circle
     
     // Draw arrow
     line(0,30,-15,15);

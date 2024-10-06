@@ -87,11 +87,16 @@ function setup() {
     // ax = ( k1/Ig * ( C + B*AG*cos(gamma)*C/(Ig-AG*cos(gamma)*B) ) - u1*omega**2) / ( 1 - k1*A/Ig - B*AG*cos(gamma)*A/(Ig - AG*cos(gamma)*B) );
     // ay = AG * cos(gamma) * (A * ax + C) / (Ig - AG * cos(gamma) * B);
     // alpha = A * ax + B * ay + C;
+
+    // some impossible to debug lines
     alpha = -(((-cx0)*m*omega**2*u1*cos(ramp_angle)-d*m*omega**2*u1*cos(ramp_angle)+cy0*omega**2*u1*sin(ramp_angle)-h*omega**2*u1*sin(ramp_angle)+cx0*W*sin(ramp_angle)+AG*d*omega**2*sin(gamma)*sin(ramp_angle)-AG*cx0*m*omega**2*sin(gamma)*sin(ramp_angle)-AG*d*m*omega**2*sin(gamma)*sin(ramp_angle))/(cx0*k1*m*cos(ramp_angle)+d*k1*m*cos(ramp_angle)+Ig*sin(ramp_angle)-cy0*k1*sin(ramp_angle)+h*k1*sin(ramp_angle)-AG*d*cos(gamma)*sin(ramp_angle)+AG*cx0*m*cos(gamma)*sin(ramp_angle) + AG*d*m*cos(gamma)*sin(ramp_angle)));
+    ax = -((Ig*omega**2*u1*sin(ramp_angle) + cx0*k1*W*sin(ramp_angle) - AG*d*omega**2*u1*cos(gamma)*sin(ramp_angle) + AG*cx0*m*omega**2*u1*cos(gamma)*sin(ramp_angle) + AG*d*m*omega**2*u1*cos(gamma)*sin(ramp_angle) + AG*d*k1*omega**2*sin(gamma)*sin(ramp_angle) - AG*cx0*k1*m*omega**2*sin(gamma)*sin(ramp_angle) - AG*d*k1*m*omega**2*sin(gamma)*sin(ramp_angle))/(cx0*k1*m*cos(ramp_angle) + d*k1*m*cos(ramp_angle) + Ig*sin(ramp_angle) - cy0*k1*sin(ramp_angle) + h*k1*sin(ramp_angle) - AG*d*cos(gamma)*sin(ramp_angle) + AG*cx0*m*cos(gamma)*sin(ramp_angle) + AG*d*m*cos(gamma)*sin(ramp_angle)));
+    ay = -(((-AG)*cx0*m*omega^2*u1*cos(gamma)*cos(ramp_angle) - AG*d*m*omega^2*u1*cos(gamma)*cos(ramp_angle) + AG*cx0*k1*m*omega^2*cos(ramp_angle)*sin(gamma) + AG*d*k1*m*omega^2*cos(ramp_angle)*sin(gamma) + AG*cy0*omega^2*u1*cos(gamma)*sin(ramp_angle) - AG*h*omega^2*u1*cos(gamma)*sin(ramp_angle) + AG*cx0*W*cos(gamma)*sin(ramp_angle) + AG*Ig*omega^2*sin(gamma)*sin(ramp_angle) - AG*cy0*k1*omega^2*sin(gamma)*sin(ramp_angle) + AG*h*k1*omega^2*sin(gamma)*sin(ramp_angle))/(cx0*k1*m*cos(ramp_angle) + d*k1*m*cos(ramp_angle) + Ig*sin(ramp_angle) - cy0*k1*sin(ramp_angle) + h*k1*sin(ramp_angle) - AG*d*cos(gamma)*sin(ramp_angle) + AG*cx0*m*cos(gamma)*sin(ramp_angle) + AG*d*m*cos(gamma)*sin(ramp_angle)));
 
-    console.log(omega);
-
-    console.log(alpha)
+    console.log(omega); // correct
+    console.log(alpha); // incorrect wrt answer key should be -0.283
+    console.log(ax); // incorrect wrt answer key should be -1.82
+    console.log(ay); // incorrect wrt answer key should be -1.69
 }
 
 function draw() {

@@ -4,7 +4,7 @@ Everything in SI unless otherwise specified. For explanation of variables see: n
 */
 
 // user input
-const ramp_angle = 60 / 180 * Math.PI;
+const ramp_angle = 20 / 180 * Math.PI;
 const h = 0.4;
 const d = 1.2;
 const cx0 = 1.6;
@@ -20,10 +20,6 @@ const W = m * g;
 // static geometry based on user input
 const AB = rms(cx0 + d, h);
 const AG = rms(cx0, cy0);
-// helper constants
-const A = m / Math.tan(ramp_angle) + cy0 - h;
-const B = d - m * (d + cx0);
-const C =  - W * cx0;
 
 
 // truck state
@@ -44,7 +40,7 @@ let IC_y;
 
 // simulation parameters
 let t;
-const dt = 0.001;
+const dt = 0.00001;
 
 // drawing variables
 let canvas_width = 900; // [px]
@@ -86,6 +82,16 @@ function setup() {
     R = AB * cos(beta) / sin(ramp_angle);
     omega = v_b0 / R;
     t = 0;
+    k1 = AB / tan(ramp_angle) * cos(beta) + AB * sin(beta) - AG * sin(gamma);
+    u1 = AB / tan(ramp_angle) * sin(beta) - AB * cos(beta) + AG * cos(gamma);
+    // ax = ( k1/Ig * ( C + B*AG*cos(gamma)*C/(Ig-AG*cos(gamma)*B) ) - u1*omega**2) / ( 1 - k1*A/Ig - B*AG*cos(gamma)*A/(Ig - AG*cos(gamma)*B) );
+    // ay = AG * cos(gamma) * (A * ax + C) / (Ig - AG * cos(gamma) * B);
+    // alpha = A * ax + B * ay + C;
+    alpha = -(((-cx0)*m*omega**2*u1*cos(ramp_angle)-d*m*omega**2*u1*cos(ramp_angle)+cy0*omega**2*u1*sin(ramp_angle)-h*omega**2*u1*sin(ramp_angle)+cx0*W*sin(ramp_angle)+AG*d*omega**2*sin(gamma)*sin(ramp_angle)-AG*cx0*m*omega**2*sin(gamma)*sin(ramp_angle)-AG*d*m*omega**2*sin(gamma)*sin(ramp_angle))/(cx0*k1*m*cos(ramp_angle)+d*k1*m*cos(ramp_angle)+Ig*sin(ramp_angle)-cy0*k1*sin(ramp_angle)+h*k1*sin(ramp_angle)-AG*d*cos(gamma)*sin(ramp_angle)+AG*cx0*m*cos(gamma)*sin(ramp_angle) + AG*d*m*cos(gamma)*sin(ramp_angle)));
+
+    console.log(omega);
+
+    console.log(alpha)
 }
 
 function draw() {
@@ -94,15 +100,17 @@ function draw() {
     gamma += omega * dt;
     delta += omega * dt; // truck floor with repect to ground level
     R = AB * cos(beta) / sin(ramp_angle);
-    omega = v_b0 / R; // should be changed
+    // omega = v_b0 / R; // should be changed
+    alpha = -(((-cx0)*m*omega**2*u1*cos(ramp_angle)-d*m*omega**2*u1*cos(ramp_angle)+cy0*omega**2*u1*sin(ramp_angle)-h*omega**2*u1*sin(ramp_angle)+cx0*W*sin(ramp_angle)+AG*d*omega**2*sin(gamma)*sin(ramp_angle)-AG*cx0*m*omega**2*sin(gamma)*sin(ramp_angle)-AG*d*m*omega**2*sin(gamma)*sin(ramp_angle))/(cx0*k1*m*cos(ramp_angle)+d*k1*m*cos(ramp_angle)+Ig*sin(ramp_angle)-cy0*k1*sin(ramp_angle)+h*k1*sin(ramp_angle)-AG*d*cos(gamma)*sin(ramp_angle)+AG*cx0*m*cos(gamma)*sin(ramp_angle) + AG*d*m*cos(gamma)*sin(ramp_angle)));
 
+    omega += alpha * dt;
 
     // helper variables
     IC_y = AB * sin(beta) + R * cos(ramp_angle); // contrary to the drawing, this is with repect to point A (y1 + y2)
     IC_x += IC_y * omega * dt; // contrary to the drawing, in global coordinate system
     k1 = AB / tan(ramp_angle) * cos(beta) + AB * sin(beta) - AG * sin(gamma);
     u1 = AB / tan(ramp_angle) * sin(beta) - AB * cos(beta) + AG * cos(gamma);
-    t += dt
+    t += dt;
 
     // set up drawing
     background(240);
@@ -123,7 +131,7 @@ function draw() {
     // IC visualization
     stroke("green");
     strokeWeight(0.01);
-    reference_point = createVector(d + cx0 + t * v_b0 * cos(ramp_angle), h + t * v_b0 * sin(ramp_angle)) // expected movement of bumper initially
+    reference_point = createVector(d + cx0 + t * v_b0 * cos(ramp_angle), h + t * v_b0 * sin(ramp_angle)); // expected movement of bumper initially
     line(IC_x, 0, IC_x, IC_y);
     line(reference_point.x, reference_point.y, reference_point.x - R * sin(ramp_angle), reference_point.y + R * cos(ramp_angle));
     stroke("red");

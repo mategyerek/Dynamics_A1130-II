@@ -43,7 +43,57 @@ function loadResizedImage(imgPath, scale, callback) {
     });
 }
 
-function drawAxis() {
+function drawAxis(x,y,length,start,end,step,horizontal=true,axisName="Axis",width=1,notchHeight=4,labelSize=15,color="white"){
+    push();
+    textAlign(CENTER,TOP);
+    textSize(labelSize);
+    fill(color);
+    stroke(color);
+    strokeWeight(width);
+    translate(x,y);
+
+    let nameX = length/2;
+    let nameY, notchLabelOffSet;
+    let headOffSetX = 7, headOffSetY = 7;
+
+    if (!horizontal) {
+        notchLabelOffSet=-Math.max(headOffSetY,notchHeight)-labelSize-5;
+        nameY = notchLabelOffSet-labelSize-5;
+
+        translate(Math.max(notchHeight,labelSize)+2*labelSize,0);
+        rotate(-HALF_PI);
+
+    } else {
+        notchLabelOffSet = Math.max(headOffSetY,notchHeight);
+        nameY = notchLabelOffSet+labelSize;
+        
+    }
+    line(0,0,length,0);
+
+    //labels
+    text(axisName,nameX,nameY);
+
+    //arrow at end
+    line(length,0,length-headOffSetX,headOffSetY);
+    line(length,0,length-headOffSetX,-headOffSetY);
+
+    //notches
+    let lastNotchOffSet = 10;
+    let notchNum = Math.floor((end-start)/step)+1;
+    let notch, notchX;
+    let notchStep = (length-lastNotchOffSet)/(notchNum-1);
+
+    line(0,-notchHeight/2,0,notchHeight/2);
+    for (let i = 0;i < notchNum;i++) {
+        notchX = i*notchStep;
+        notch = start+i*step;
+        line(notchX,-notchHeight/2,notchX,notchHeight/2);
+        text(notch,notchX,notchLabelOffSet);
+    }
+    pop();
+}
+
+function drawAxisSystem(x,y,w,h,startX,endX,startY,endY,stepX,stepY,xAxisName="x-axis",yAxisName="y-axis",width=1,notchHeight=4,labelSize=15,color="white") {
     
 }
 
@@ -112,6 +162,8 @@ function setup() {
     addGraph = createButton("Add graph");
     addGraph.size(0.25*spWidth,49);
     addGraph.position(scrWidth+0.75*spWidth-2*spMargin,spMargin+43);
+
+    textFont(font);
 }
 
   
@@ -336,7 +388,6 @@ function draw() {
 
     textAlign(CENTER,TOP);
     fill(textColor);
-    textFont(font);
 
     textSize(25);
     text("Add new plot",spWidth/2,spMargin);
@@ -346,7 +397,8 @@ function draw() {
     text("x-axis",2*spMargin,70);
     text("y-axis",2*spMargin,100);
 
-
+    drawAxis(spMargin,100+100+2*spMargin,100,0,30,10,false,"y-axis");
+    drawAxis(spMargin,100+100+2*spMargin,spWidth-2*spMargin,10,100,10,true,"x-axis");
 
     pop();
 }

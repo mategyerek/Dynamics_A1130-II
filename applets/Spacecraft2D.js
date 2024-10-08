@@ -1,3 +1,4 @@
+
 let x = 0, y = 0; // canvas position
 let absX = 0, absY = 0; // absolute position
 let imageScale = 0.4;
@@ -34,6 +35,17 @@ let textColor = "white";
 //text settings
 let spMargin = 10;
 
+//graphs
+let x_ = spMargin;
+let y_ = 2*spMargin+100
+let w_ = spWidth-2*spMargin;
+let h_ = (scrHeight-4*spMargin-100)/2;
+
+let graph1,graph2;
+let dataX = [0,1,2,3,4,5,6,7,8,9,10];
+let dataY = [1,1,1,2,3,5,8,9,0,2,3];
+
+
 
 // Utility function to load and resize images with a callback
 function loadResizedImage(imgPath, scale, callback) {
@@ -41,60 +53,6 @@ function loadResizedImage(imgPath, scale, callback) {
         img.resize(int(img.width * scale), 0);
         callback(img);
     });
-}
-
-function drawAxis(x,y,length,start,end,step,horizontal=true,axisName="Axis",width=1,notchHeight=4,labelSize=15,color="white"){
-    push();
-    textAlign(CENTER,TOP);
-    textSize(labelSize);
-    fill(color);
-    stroke(color);
-    strokeWeight(width);
-    translate(x,y);
-
-    let nameX = length/2;
-    let nameY, notchLabelOffSet;
-    let headOffSetX = 7, headOffSetY = 7;
-
-    if (!horizontal) {
-        notchLabelOffSet=-Math.max(headOffSetY,notchHeight)-labelSize-5;
-        nameY = notchLabelOffSet-labelSize-5;
-
-        translate(Math.max(notchHeight,labelSize)+2*labelSize,0);
-        rotate(-HALF_PI);
-
-    } else {
-        notchLabelOffSet = Math.max(headOffSetY,notchHeight);
-        nameY = notchLabelOffSet+labelSize;
-        
-    }
-    line(0,0,length,0);
-
-    //labels
-    text(axisName,nameX,nameY);
-
-    //arrow at end
-    line(length,0,length-headOffSetX,headOffSetY);
-    line(length,0,length-headOffSetX,-headOffSetY);
-
-    //notches
-    let lastNotchOffSet = 10;
-    let notchNum = Math.floor((end-start)/step)+1;
-    let notch, notchX;
-    let notchStep = (length-lastNotchOffSet)/(notchNum-1);
-
-    line(0,-notchHeight/2,0,notchHeight/2);
-    for (let i = 0;i < notchNum;i++) {
-        notchX = i*notchStep;
-        notch = start+i*step;
-        line(notchX,-notchHeight/2,notchX,notchHeight/2);
-        text(notch,notchX,notchLabelOffSet);
-    }
-    pop();
-}
-
-function drawAxisSystem(x,y,w,h,startX,endX,startY,endY,stepX,stepY,xAxisName="x-axis",yAxisName="y-axis",width=1,notchHeight=4,labelSize=15,color="white") {
-    
 }
 
 function preload() {
@@ -164,6 +122,9 @@ function setup() {
     addGraph.position(scrWidth+0.75*spWidth-2*spMargin,spMargin+43);
 
     textFont(font);
+
+    graph1 = new LinPlot2D(x_,y_,w_,h_);
+    graph2 = new LinPlot2D(x_,y_+h_+spMargin,w_,h_);
 }
 
   
@@ -307,7 +268,7 @@ function draw() {
     if (keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)){
         push();
     
-        fill(accColor)
+        fill(accColor);
         stroke(accColor);
         strokeWeight(3);
         translate(0,4);
@@ -397,8 +358,10 @@ function draw() {
     text("x-axis",2*spMargin,70);
     text("y-axis",2*spMargin,100);
 
-    drawAxis(spMargin,100+100+2*spMargin,100,0,30,10,false,"y-axis");
-    drawAxis(spMargin,100+100+2*spMargin,spWidth-2*spMargin,10,100,10,true,"x-axis");
 
+    //drawAxisSystem(x_,y_,w_,h_,10,100,10,10,100,10);
+    graph1.plot(dataX,dataY);
+    graph2.plot(dataX,dataY);
+    //rect(x_,y_,w_,h_);
     pop();
 }

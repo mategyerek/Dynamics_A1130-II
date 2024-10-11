@@ -8,7 +8,7 @@ class LinPlot2D {
 
         this.width=1;
         this.notchHeight=4;
-        this.labelSize=15;
+        this.labelSize=8;
         this.color="white";
         this.headOffSetX=7;
         this.headOffSetY=7;
@@ -106,7 +106,7 @@ class LinPlot2D {
         line(0,-this.notchHeight/2,0,this.notchHeight/2);
         for (let i = 0;i < notchNum;i++) {
             notchX = i*notchStep;
-            notch = start+i*step;
+            notch = (start+i*step).toFixed(2);
             line(notchX,-this.notchHeight/2,notchX,this.notchHeight/2);
             text(notch,notchX,notchLabelOffSet);
         }
@@ -150,10 +150,10 @@ class LinPlot2D {
         this.drawAxisSystem();
 
         for (let i = 0; i < dataX.length-1; i++) {
-            let x0 = this.drawingArea[0]+(dataX[i])*scaleX;
-            let y0 = this.drawingArea[1]-(dataY[i])*scaleY;
-            let x1 = this.drawingArea[0]+(dataX[i+1])*scaleX;
-            let y1 = this.drawingArea[1]-(dataY[i+1])*scaleY;
+            let x0 = this.drawingArea[0]+(dataX[i]-minX)*scaleX;
+            let y0 = this.drawingArea[1]-(dataY[i]-minY)*scaleY;
+            let x1 = this.drawingArea[0]+(dataX[i+1]-minX)*scaleX;
+            let y1 = this.drawingArea[1]-(dataY[i+1]-minY)*scaleY;
             line(x0,y0,x1,y1);
         }
         pop();

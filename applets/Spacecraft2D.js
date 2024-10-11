@@ -15,15 +15,24 @@ let spWidth = 400;
 
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
 
+let gameStarted = false;
+
 
 // SI plottables - 100 px = 1 m
 let posXSI = [];
 let posYSI = [];
+let absDist = [];
+let displacement = [];
 let velXSI = [];
 let velYSI = [];
+let speed = [];
 let accXSI = [];
 let accYSI = [];
+let absAcc = [];
 let t = [];
+
+let logCount = 0;
+let graph1Xdata,graph1Ydata;
 
 // colors
 let naviColor = "cyan";
@@ -36,16 +45,22 @@ let textColor = "white";
 let spMargin = 10;
 
 //graphs
+let numGraphs = 0;
+
 let x_ = spMargin;
 let y_ = 2*spMargin+100
 let w_ = spWidth-2*spMargin;
 let h_ = (scrHeight-4*spMargin-100)/2;
 
 let graph1,graph2;
-let dataX = [0,1,2,3,4,5,6,7,8,9,10];
-let dataY = [1,1,1,2,3,5,8,9,0,2,3];
+let dataX1, dataX2;
+let dataY1, dataY2;
 
+let removeSize = 10;
 
+function euclidNorm(x1,x2) {
+    return Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2));
+}
 
 // Utility function to load and resize images with a callback
 function loadResizedImage(imgPath, scale, callback) {
@@ -73,12 +88,16 @@ function preload() {
 
 function setup() {
     createCanvas(scrWidth+spWidth,scrHeight);
-    posXSI.push(absX/100);
-    posYSI.push(absY/100);
-    velXSI.push(speedX/100);
-    velYSI.push(speedY/100);
+    posXSI.push(0);
+    posYSI.push(0);
+    absDist.push(0);
+    displacement.push(0);
+    velXSI.push(0);
+    velYSI.push(0);
+    speed.push(0);
     accXSI.push(0);
     accYSI.push(0);
+    absAcc.push(0);
     t.push(0);
 
     //dropdowns
@@ -99,6 +118,8 @@ function setup() {
 
     xDropdown.position(scrWidth+2*spMargin+50,spMargin+43);
 
+    //xDropdown.changed();
+
     // y-axis dropdown
     yDropdown = createSelect(false);
     
@@ -116,10 +137,14 @@ function setup() {
     
     yDropdown.position(scrWidth+2*spMargin+50,spMargin+73);
 
+    //yDropdown.changed();
+
     //create add graph button
     addGraph = createButton("Add graph");
     addGraph.size(0.25*spWidth,49);
     addGraph.position(scrWidth+0.75*spWidth-2*spMargin,spMargin+43);
+
+    addGraph.mousePressed(addGraphPressed);
 
     textFont(font);
 
@@ -127,7 +152,31 @@ function setup() {
     graph2 = new LinPlot2D(x_,y_+h_+spMargin,w_,h_);
 }
 
-  
+function getSelectedData(selection) {
+    if (selection == "x") return posXSI;
+    if (selection == "y") return posYSI;
+    if (selection == "absolute displacement") return displacement;
+    if (selection == "distance covered") return absDist;
+    if (selection == "v_x") return velXSI;
+    if (selection == "v_y") return velYSI;
+    if (selection == "speed") return speed;
+    if (selection == "a_x") return accXSI;
+    if (selection == "a_y") return accYSI;
+    if (selection == "absolute value of acceleration") return absAcc;
+    if (selection == "t") return t;
+    return [];
+}
+
+function addGraphPressed() {
+    if (numGraphs<2) {
+        numGraphs++;
+    }
+    console.log(absDist);
+    gameStarted = true;
+    
+
+}
+
 function draw() {
     background(0);
     translate(scrWidth/2,scrHeight/2); //translate origin to middle
@@ -228,11 +277,20 @@ function draw() {
     absY += speedY*dt;
 
     // logging part 2
+    
     posXSI.push(absX/100);
-    posYSI.push(absY/100);
+    posYSI.push(-absY/100);
+    displacement.push(euclidNorm(posXSI[logCount],posYSI[logCount]));
+    absDist.push(absDist[logCount]+euclidNorm(posXSI[logCount+1]-posXSI[logCount],posYSI[logCount+1]-posYSI[logCount]));
     velXSI.push(speedX/100);
     velYSI.push(-speedY/100);
-    t.push(t[t.length-1]+dt/1000);
+    speed.push(euclidNorm(velXSI[logCount],velYSI[logCount]));
+    absAcc.push(euclidNorm(accXSI[logCount],accYSI[logCount]));
+    t.push(t[logCount]+dt);
+    logCount++;
+
+
+    
 
     // draw velocity vector
     {
@@ -272,7 +330,7 @@ function draw() {
         stroke(accColor);
         strokeWeight(3);
         translate(0,4);
-        let accVec = createVector(accXSI[accXSI.length-1],-accYSI[accXSI.length-1]);
+        let accVec = createVector(accXSI[logCount],-accYSI[logCount]);
         let heading = accVec.heading();
         let magn = accVec.mag()*10; //scale x0.1
         rotate(heading-HALF_PI);
@@ -358,10 +416,59 @@ function draw() {
     text("x-axis",2*spMargin,70);
     text("y-axis",2*spMargin,100);
 
+    //plotting
+    if (numGraphs==0) {
+        graph1Xdata = xDropdown.value();
+        graph1Ydata = yDropdown.value();
+    }
 
-    //drawAxisSystem(x_,y_,w_,h_,10,100,10,10,100,10);
-    graph1.plot(dataX,dataY);
-    graph2.plot(dataX,dataY);
-    //rect(x_,y_,w_,h_);
+
+    if (numGraphs>0) {
+        dataX1 = getSelectedData(graph1Xdata);
+        dataY1 = getSelectedData(graph1Ydata);
+
+        if (logCount>2*spWidth) { //improve performance after long runtime
+            dataX1 = dataX1.slice(-2*spWidth);
+            dataY1 = dataY1.slice(-2*spWidth); 
+        }
+
+        graph1.axisNames(graph1Xdata,graph1Ydata);
+        graph1.plot(dataX1,dataY1);
+    }
+    if (numGraphs==2) {
+        let graph2Xdata = xDropdown.value();
+        let graph2Ydata = yDropdown.value();
+        dataX2 = getSelectedData(graph2Xdata);
+        dataY2 = getSelectedData(graph2Ydata);
+
+        if (logCount>2*spWidth) {
+            dataX2 = dataX2.slice(-2*spWidth);
+            dataY2 = dataY2.slice(-2*spWidth); 
+        }
+        
+        graph2.axisNames(graph2Xdata,graph2Ydata);
+        graph2.plot(dataX2,dataY2);
+    }
+
+    // remove plot buttons
+    push();
+    strokeWeight(2);
+    fill("red");
+    if (numGraphs>0) {
+    stroke("red");
+    rect(x_-removeSize/2,y_,removeSize,removeSize);
+    stroke("white");
+    line(x_-removeSize/2+2,y_+2,x_+removeSize/2-2,y_+removeSize-2);
+    line(x_-removeSize/2+2,y_+removeSize-2,x_+removeSize/2-2,y_+2);
+    }
+    if (numGraphs>1) {
+    stroke("red");
+    rect(x_-removeSize/2,y_+h_+spMargin,removeSize,removeSize);
+    stroke("white");   
+    line(x_-removeSize/2+2,y_+h_+spMargin+2,x_+removeSize/2-2,y_+h_+spMargin+removeSize-2);
+    line(x_-removeSize/2+2,y_+h_+spMargin+removeSize-2,x_+removeSize/2-2,y_+h_+spMargin+2);
+    pop();
+    }
+
     pop();
 }

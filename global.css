@@ -6,3 +6,20 @@ html, body {
 canvas {
   display: block;
 }
+
+.icon-btn {
+  font-family: 'Material Icons';
+  font-size: 42px;
+  cursor: pointer;
+  color: #DDDDDD;
+  position: absolute;
+  user-select: none;
+}
+.icon-btn:hover {
+  color:#FFFF00;
+}
+
+.oncanvas-text {
+  color: #DDDDDD;
+  font-family: "Computer Modern Sans", sans-serif;
+}

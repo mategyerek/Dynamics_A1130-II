@@ -25,18 +25,31 @@ class LinPlot2D {
         this.xDefaultSteps = 10;
         this.yDefaultSteps = 5;
 
+        this.startX,this.endX,this.stepX;
+        this.startY,this.endY,this.stepY;
+        this.resetAxes();
+
     }
 
-    xAxisSize(startX,endX,stepX,xStepNumber) {
+    xAxisSize(startX,endX,stepX=null,) {
         this.startX = startX;
         this.endX = endX;
         this.stepX = stepX;
     }
 
-    yAxisSize(startY,endY,stepY) {
+    yAxisSize(startY,endY,stepY=null) {
         this.startY = startY;
         this.endY = endY;
         this.stepY = stepY;
+    }
+
+    resetAxes() {
+        this.startX = null;
+        this.endX = null;
+        this.stepX = null;
+        this.startY = null;
+        this.endY = null;
+        this.stepY = null;
     }
 
     axisNames(xAxisName,yAxisName){
@@ -54,7 +67,8 @@ class LinPlot2D {
 
         this.axisSideBox = Math.max(headOffSetY,notchHeight);
         this.OffSet = this.axisSideBox+2*labelSize+5;
-        this.drawingArea = [this.x+this.OffSet,this.y+this.h-this.OffSet];
+        this.drawingArea = [this.x+this.OffSet,this.y+this.h-this.OffSet,
+            this.w-this.OffSet-this.lastNotchOffSet,this.h-this.OffSet-this.lastNotchOffSet];
     }
 
     drawAxis(x,y,length,horizontal=true){
@@ -133,9 +147,37 @@ class LinPlot2D {
         let maxY = Math.max(...dataY);
         let minY = Math.min(...dataY);
         
-        let scaleX = this.drawingArea[2]/(maxX-minX);
-        let scaleY = this.drawingArea[3]/(maxY-minY);
+        let scaleX, scaleY;
 
+        if (minX == maxX) {
+            scaleX = this.drawingArea[2]/2;
+            if (this.startX == null) {
+            minX -= 1;
+            maxX += 1;
+            stepX = (maxX-minX)/2;
+            }
+        } else {scaleX = this.drawingArea[2]/(maxX-minX);}
+
+        if (minY == maxY) {
+            scaleY = this.drawingArea[3]/2;
+            if (this.startY == null) {
+            minY -= 1;
+            maxY += 1;
+            stepY = (maxY-minY)/2;
+            }
+        } else {scaleY = this.drawingArea[3]/(maxY-minY);}
+
+        if (this.startX != null) {
+            minX = this.startX;
+            maxX = this.endX;
+            stepX = this.stepX;
+        }
+        if (this.startY != null) {
+            minY = this.startY;
+            maxY = this.endY;
+            stepY = this.stepY;
+        }
+        
         if (stepX == null) {
             stepX = (maxX-minX)/xStepNumber;
         }
@@ -148,7 +190,7 @@ class LinPlot2D {
         this.yAxisSize(minY,maxY,stepY);
 
         this.drawAxisSystem();
-
+    
         for (let i = 0; i < dataX.length-1; i++) {
             let x0 = this.drawingArea[0]+(dataX[i]-minX)*scaleX;
             let y0 = this.drawingArea[1]-(dataY[i]-minY)*scaleY;
@@ -156,6 +198,9 @@ class LinPlot2D {
             let y1 = this.drawingArea[1]-(dataY[i+1]-minY)*scaleY;
             line(x0,y0,x1,y1);
         }
+        console.log(scaleX,scaleY);
+
+        this.resetAxes();
         pop();
     }
 

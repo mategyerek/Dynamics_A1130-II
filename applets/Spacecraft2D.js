@@ -32,7 +32,8 @@ let absAcc = [];
 let t = [];
 
 let logCount = 0;
-let graph1Xdata,graph1Ydata;
+let graph1Xdata, graph1Ydata;
+let graph2Xdata, graph2Ydata;
 
 // colors
 let naviColor = "cyan";
@@ -47,10 +48,10 @@ let spMargin = 10;
 //graphs
 let numGraphs = 0;
 
-let x_ = spMargin;
-let y_ = 2*spMargin+100
-let w_ = spWidth-2*spMargin;
-let h_ = (scrHeight-4*spMargin-100)/2;
+let graphX = spMargin;
+let graphY = 2*spMargin+100
+let graphW = spWidth-2*spMargin;
+let graphH = (scrHeight-4*spMargin-100)/2;
 
 let graph1,graph2;
 let dataX1, dataX2;
@@ -148,8 +149,8 @@ function setup() {
 
     textFont(font);
 
-    graph1 = new LinPlot2D(x_,y_,w_,h_);
-    graph2 = new LinPlot2D(x_,y_+h_+spMargin,w_,h_);
+    graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);
+    graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);
 }
 
 function getSelectedData(selection) {
@@ -170,9 +171,9 @@ function getSelectedData(selection) {
 function addGraphPressed() {
     if (numGraphs<2) {
         numGraphs++;
-    }
-    console.log(absDist);
-    gameStarted = true;
+    } else if (numGraphs==0) {graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);}
+    else if (numGraphs==1) {graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);}
+    gameStarted = true; // for future pause-unpause functionality
     
 
 }
@@ -420,8 +421,20 @@ function draw() {
     if (numGraphs==0) {
         graph1Xdata = xDropdown.value();
         graph1Ydata = yDropdown.value();
+        if (graph1Ydata == "a_x" || graph1Ydata == "a_y") {
+            graph1.yAxisSize(-acceleration/100,acceleration/100,acceleration/100);
+        } else if (graph1Ydata == "absolute value of acceleration") {
+            graph1.yAxisSize(0,Math.SQRT2*acceleration/100,Math.SQRT2*acceleration/100);
+        }
+    } else if (numGraphs == 1) {
+        graph2Xdata = xDropdown.value();
+        graph2Ydata = yDropdown.value();
+        if (graph2Ydata == "a_x" || graph2Ydata == "a_y") {
+            graph2.yAxisSize(-acceleration/100,acceleration/100,acceleration/100);
+        } else if (graph2Ydata == "absolute value of acceleration") {
+            graph2.yAxisSize(0,Math.SQRT2*acceleration/100,Math.SQRT2*acceleration/100);
+        }
     }
-
 
     if (numGraphs>0) {
         dataX1 = getSelectedData(graph1Xdata);
@@ -435,15 +448,13 @@ function draw() {
         graph1.axisNames(graph1Xdata,graph1Ydata);
         graph1.plot(dataX1,dataY1);
     }
-    if (numGraphs==2) {
-        let graph2Xdata = xDropdown.value();
-        let graph2Ydata = yDropdown.value();
+    if (numGraphs>1) {
         dataX2 = getSelectedData(graph2Xdata);
         dataY2 = getSelectedData(graph2Ydata);
 
         if (logCount>2*spWidth) {
             dataX2 = dataX2.slice(-2*spWidth);
-            dataY2 = dataY2.slice(-2*spWidth); 
+            dataY2 = dataY2.slice(-2*spWidth);
         }
         
         graph2.axisNames(graph2Xdata,graph2Ydata);
@@ -456,17 +467,17 @@ function draw() {
     fill("red");
     if (numGraphs>0) {
     stroke("red");
-    rect(x_-removeSize/2,y_,removeSize,removeSize);
+    rect(graphX-removeSize/2,graphY,removeSize,removeSize);
     stroke("white");
-    line(x_-removeSize/2+2,y_+2,x_+removeSize/2-2,y_+removeSize-2);
-    line(x_-removeSize/2+2,y_+removeSize-2,x_+removeSize/2-2,y_+2);
+    line(graphX-removeSize/2+2,graphY+2,graphX+removeSize/2-2,graphY+removeSize-2);
+    line(graphX-removeSize/2+2,graphY+removeSize-2,graphX+removeSize/2-2,graphY+2);
     }
     if (numGraphs>1) {
     stroke("red");
-    rect(x_-removeSize/2,y_+h_+spMargin,removeSize,removeSize);
+    rect(graphX-removeSize/2,graphY+graphH+spMargin,removeSize,removeSize);
     stroke("white");   
-    line(x_-removeSize/2+2,y_+h_+spMargin+2,x_+removeSize/2-2,y_+h_+spMargin+removeSize-2);
-    line(x_-removeSize/2+2,y_+h_+spMargin+removeSize-2,x_+removeSize/2-2,y_+h_+spMargin+2);
+    line(graphX-removeSize/2+2,graphY+graphH+spMargin+2,graphX+removeSize/2-2,graphY+graphH+spMargin+removeSize-2);
+    line(graphX-removeSize/2+2,graphY+graphH+spMargin+removeSize-2,graphX+removeSize/2-2,graphY+graphH+spMargin+2);
     pop();
     }
 

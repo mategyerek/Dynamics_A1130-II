@@ -421,7 +421,7 @@ function draw() {
     if (numGraphs==0) {
         graph1Xdata = xDropdown.value();
         graph1Ydata = yDropdown.value();
-        if (graph1Ydata == "a_x" || graph1Ydata == "a_y") {
+        if (graph1Ydata == "a_x" || graph1Ydata == "a_y") { //these dont work for some reason, need to be fixed
             graph1.yAxisSize(-acceleration/100,acceleration/100,acceleration/100);
         } else if (graph1Ydata == "absolute value of acceleration") {
             graph1.yAxisSize(0,Math.SQRT2*acceleration/100,Math.SQRT2*acceleration/100);

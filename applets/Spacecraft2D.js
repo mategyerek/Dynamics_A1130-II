@@ -1,3 +1,4 @@
+
 let x = 0, y = 0; // canvas position
 let absX = 0, absY = 0; // absolute position
 let imageScale = 0.4;
@@ -14,15 +15,25 @@ let spWidth = 400;
 
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
 
+let gameStarted = false;
+
 
 // SI plottables - 100 px = 1 m
 let posXSI = [];
 let posYSI = [];
+let absDist = [];
+let displacement = [];
 let velXSI = [];
 let velYSI = [];
+let speed = [];
 let accXSI = [];
 let accYSI = [];
+let absAcc = [];
 let t = [];
+
+let logCount = 0;
+let graph1Xdata, graph1Ydata;
+let graph2Xdata, graph2Ydata;
 
 // colors
 let naviColor = "cyan";
@@ -34,6 +45,23 @@ let textColor = "white";
 //text settings
 let spMargin = 10;
 
+//graphs
+let numGraphs = 0;
+
+let graphX = spMargin;
+let graphY = 2*spMargin+100
+let graphW = spWidth-2*spMargin;
+let graphH = (scrHeight-4*spMargin-100)/2;
+
+let graph1,graph2;
+let dataX1, dataX2;
+let dataY1, dataY2;
+
+let removeSize = 10;
+
+function euclidNorm(x1,x2) {
+    return Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2));
+}
 
 // Utility function to load and resize images with a callback
 function loadResizedImage(imgPath, scale, callback) {
@@ -61,12 +89,16 @@ function preload() {
 
 function setup() {
     createCanvas(scrWidth+spWidth,scrHeight);
-    posXSI.push(absX/100);
-    posYSI.push(absY/100);
-    velXSI.push(speedX/100);
-    velYSI.push(speedY/100);
+    posXSI.push(0);
+    posYSI.push(0);
+    absDist.push(0);
+    displacement.push(0);
+    velXSI.push(0);
+    velYSI.push(0);
+    speed.push(0);
     accXSI.push(0);
     accYSI.push(0);
+    absAcc.push(0);
     t.push(0);
 
     //dropdowns
@@ -87,6 +119,8 @@ function setup() {
 
     xDropdown.position(scrWidth+2*spMargin+50,spMargin+43);
 
+    //xDropdown.changed();
+
     // y-axis dropdown
     yDropdown = createSelect(false);
     
@@ -104,13 +138,46 @@ function setup() {
     
     yDropdown.position(scrWidth+2*spMargin+50,spMargin+73);
 
+    //yDropdown.changed();
+
     //create add graph button
     addGraph = createButton("Add graph");
     addGraph.size(0.25*spWidth,49);
     addGraph.position(scrWidth+0.75*spWidth-2*spMargin,spMargin+43);
+
+    addGraph.mousePressed(addGraphPressed);
+
+    textFont(font);
+
+    graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);
+    graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);
 }
 
-  
+function getSelectedData(selection) {
+    if (selection == "x") return posXSI;
+    if (selection == "y") return posYSI;
+    if (selection == "absolute displacement") return displacement;
+    if (selection == "distance covered") return absDist;
+    if (selection == "v_x") return velXSI;
+    if (selection == "v_y") return velYSI;
+    if (selection == "speed") return speed;
+    if (selection == "a_x") return accXSI;
+    if (selection == "a_y") return accYSI;
+    if (selection == "absolute value of acceleration") return absAcc;
+    if (selection == "t") return t;
+    return [];
+}
+
+function addGraphPressed() {
+    if (numGraphs<2) {
+        numGraphs++;
+    } else if (numGraphs==0) {graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);}
+    else if (numGraphs==1) {graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);}
+    gameStarted = true; // for future pause-unpause functionality
+    
+
+}
+
 function draw() {
     background(0);
     translate(scrWidth/2,scrHeight/2); //translate origin to middle
@@ -211,11 +278,20 @@ function draw() {
     absY += speedY*dt;
 
     // logging part 2
+    
     posXSI.push(absX/100);
-    posYSI.push(absY/100);
+    posYSI.push(-absY/100);
+    displacement.push(euclidNorm(posXSI[logCount],posYSI[logCount]));
+    absDist.push(absDist[logCount]+euclidNorm(posXSI[logCount+1]-posXSI[logCount],posYSI[logCount+1]-posYSI[logCount]));
     velXSI.push(speedX/100);
     velYSI.push(-speedY/100);
-    t.push(t[t.length-1]+dt/1000);
+    speed.push(euclidNorm(velXSI[logCount],velYSI[logCount]));
+    absAcc.push(euclidNorm(accXSI[logCount],accYSI[logCount]));
+    t.push(t[logCount]+dt);
+    logCount++;
+
+
+    
 
     // draw velocity vector
     {
@@ -251,11 +327,11 @@ function draw() {
     if (keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)){
         push();
     
-        fill(accColor)
+        fill(accColor);
         stroke(accColor);
         strokeWeight(3);
         translate(0,4);
-        let accVec = createVector(accXSI[accXSI.length-1],-accYSI[accXSI.length-1]);
+        let accVec = createVector(accXSI[logCount],-accYSI[logCount]);
         let heading = accVec.heading();
         let magn = accVec.mag()*10; //scale x0.1
         rotate(heading-HALF_PI);
@@ -299,7 +375,6 @@ function draw() {
     strokeWeight(3);
     
     // Draw the arrow inside the circle
-    line(0,0,0,0) // Move arrow within the circle
     
     // Draw arrow
     line(0,30,-15,15);
@@ -333,7 +408,6 @@ function draw() {
 
     textAlign(CENTER,TOP);
     fill(textColor);
-    textFont(font);
 
     textSize(25);
     text("Add new plot",spWidth/2,spMargin);
@@ -343,7 +417,69 @@ function draw() {
     text("x-axis",2*spMargin,70);
     text("y-axis",2*spMargin,100);
 
+    //plotting
+    if (numGraphs==0) {
+        graph1Xdata = xDropdown.value();
+        graph1Ydata = yDropdown.value();
+        if (graph1Ydata == "a_x" || graph1Ydata == "a_y") { //these dont work for some reason, need to be fixed
+            graph1.yAxisSize(-acceleration/100,acceleration/100,acceleration/100);
+        } else if (graph1Ydata == "absolute value of acceleration") {
+            graph1.yAxisSize(0,Math.SQRT2*acceleration/100,Math.SQRT2*acceleration/100);
+        }
+    } else if (numGraphs == 1) {
+        graph2Xdata = xDropdown.value();
+        graph2Ydata = yDropdown.value();
+        if (graph2Ydata == "a_x" || graph2Ydata == "a_y") {
+            graph2.yAxisSize(-acceleration/100,acceleration/100,acceleration/100);
+        } else if (graph2Ydata == "absolute value of acceleration") {
+            graph2.yAxisSize(0,Math.SQRT2*acceleration/100,Math.SQRT2*acceleration/100);
+        }
+    }
 
+    if (numGraphs>0) {
+        dataX1 = getSelectedData(graph1Xdata);
+        dataY1 = getSelectedData(graph1Ydata);
+
+        if (logCount>2*spWidth) { //improve performance after long runtime
+            dataX1 = dataX1.slice(-2*spWidth);
+            dataY1 = dataY1.slice(-2*spWidth); 
+        }
+
+        graph1.axisNames(graph1Xdata,graph1Ydata);
+        graph1.plot(dataX1,dataY1);
+    }
+    if (numGraphs>1) {
+        dataX2 = getSelectedData(graph2Xdata);
+        dataY2 = getSelectedData(graph2Ydata);
+
+        if (logCount>2*spWidth) {
+            dataX2 = dataX2.slice(-2*spWidth);
+            dataY2 = dataY2.slice(-2*spWidth);
+        }
+        
+        graph2.axisNames(graph2Xdata,graph2Ydata);
+        graph2.plot(dataX2,dataY2);
+    }
+
+    // remove plot buttons
+    push();
+    strokeWeight(2);
+    fill("red");
+    if (numGraphs>0) {
+    stroke("red");
+    rect(graphX-removeSize/2,graphY,removeSize,removeSize);
+    stroke("white");
+    line(graphX-removeSize/2+2,graphY+2,graphX+removeSize/2-2,graphY+removeSize-2);
+    line(graphX-removeSize/2+2,graphY+removeSize-2,graphX+removeSize/2-2,graphY+2);
+    }
+    if (numGraphs>1) {
+    stroke("red");
+    rect(graphX-removeSize/2,graphY+graphH+spMargin,removeSize,removeSize);
+    stroke("white");   
+    line(graphX-removeSize/2+2,graphY+graphH+spMargin+2,graphX+removeSize/2-2,graphY+graphH+spMargin+removeSize-2);
+    line(graphX-removeSize/2+2,graphY+graphH+spMargin+removeSize-2,graphX+removeSize/2-2,graphY+graphH+spMargin+2);
+    pop();
+    }
 
     pop();
 }

@@ -16,7 +16,7 @@ let spWidth = 400;
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
 
 let gameStarted = false;
-
+let mouseIsClicked = false;
 
 // SI plottables - 100 px = 1 m
 let posXSI = [];
@@ -46,18 +46,20 @@ let textColor = "white";
 let spMargin = 10;
 
 //graphs
+let removeSize = 10;
+
 let numGraphs = 0;
 
 let graphX = spMargin;
 let graphY = 2*spMargin+100
-let graphW = spWidth-2*spMargin;
+let graphW = spWidth-2*spMargin-removeSize-5;
 let graphH = (scrHeight-4*spMargin-100)/2;
 
 let graph1,graph2;
 let dataX1, dataX2;
 let dataY1, dataY2;
 
-let removeSize = 10;
+
 
 function euclidNorm(x1,x2) {
     return Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2));
@@ -171,11 +173,8 @@ function getSelectedData(selection) {
 function addGraphPressed() {
     if (numGraphs<2) {
         numGraphs++;
-    } else if (numGraphs==0) {graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);}
-    else if (numGraphs==1) {graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);}
+    }
     gameStarted = true; // for future pause-unpause functionality
-    
-
 }
 
 function draw() {
@@ -462,24 +461,60 @@ function draw() {
     }
 
     // remove plot buttons
-    push();
-    strokeWeight(2);
-    fill("red");
     if (numGraphs>0) {
-    stroke("red");
-    rect(graphX-removeSize/2,graphY,removeSize,removeSize);
-    stroke("white");
-    line(graphX-removeSize/2+2,graphY+2,graphX+removeSize/2-2,graphY+removeSize-2);
-    line(graphX-removeSize/2+2,graphY+removeSize-2,graphX+removeSize/2-2,graphY+2);
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY,deleteGraph,1,removeSize);
     }
     if (numGraphs>1) {
-    stroke("red");
-    rect(graphX-removeSize/2,graphY+graphH+spMargin,removeSize,removeSize);
-    stroke("white");   
-    line(graphX-removeSize/2+2,graphY+graphH+spMargin+2,graphX+removeSize/2-2,graphY+graphH+spMargin+removeSize-2);
-    line(graphX-removeSize/2+2,graphY+graphH+spMargin+removeSize-2,graphX+removeSize/2-2,graphY+graphH+spMargin+2);
-    pop();
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY+graphH+spMargin,deleteGraph,2,removeSize);
     }
+    pop();
+}
+
+function createDeleteButton(x, y, func, arg=null, size = 10, primaryColor = "red", secondaryColor = "white", edgeRadius = 0,
+    lineWeight = 2, strokeColor = color(200,0,0), sideStrokeWeight = 1, crossOffset = 2) {
+    /*
+    Creates a square-shaped delete button. Note that x and y are measured from the top-left corner of the canvas.
+    */
+    push();
+    resetMatrix();
+    // Set the primary color for the button
+    fill(primaryColor);
+    stroke(primaryColor);
+
+    // Optional stroke color handling
+    if (Math.abs(mouseX-x)<size && Math.abs(mouseY-y)<size) {
+        if (strokeColor != null) {
+            stroke(strokeColor);
+            strokeWeight(sideStrokeWeight);
+        } else {
+            stroke(primaryColor);
+        }
+        if (mouseIsPressed && mouseIsClicked) {
+            if (arg!=null) {
+                func(arg);
+            } else {func();}
+            mouseIsClicked = false;
+        }
+    }
+
+    // Draw the button rectangle
+    rect(x, y, size, size, edgeRadius);
+
+    // Set the color for the cross (X) symbol
+    stroke(secondaryColor);
+    strokeWeight(lineWeight);
+    line(x + crossOffset, y + crossOffset, x + size - crossOffset, y + size - crossOffset);
+    line(x + crossOffset, y + size - crossOffset, x + size - crossOffset, y + crossOffset);
 
     pop();
 }
+function deleteGraph() {
+    numGraphs--;
+    graph1Xdata = graph2Xdata;
+    graph1Ydata = graph2Ydata;
+}
+
+function mouseClicked() {
+    mouseIsClicked = true;
+}
+

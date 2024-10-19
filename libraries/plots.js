@@ -1,6 +1,6 @@
 class LinPlot2D {
     constructor(x,y,w,h){
-        //x,y: top left
+        /*x,y: top left*/
         this.x = x;
         this.y = y;
         this.w = w;
@@ -135,6 +135,9 @@ class LinPlot2D {
     }
 
     plot(dataX,dataY,stepX=null,stepY=null,xStepNumber=this.yDefaultSteps,yStepNumber=this.yDefaultSteps,thickness=1,lineColor="red"){
+        /*
+        Plots LinPlot2D object.
+        */
         if (dataX.length != dataY.length) {
             throw RangeError;
         }
@@ -198,7 +201,7 @@ class LinPlot2D {
             let y1 = this.drawingArea[1]-(dataY[i+1]-minY)*scaleY;
             line(x0,y0,x1,y1);
         }
-        console.log(scaleX,scaleY);
+        //console.log(scaleX,scaleY);
 
         this.resetAxes();
         pop();

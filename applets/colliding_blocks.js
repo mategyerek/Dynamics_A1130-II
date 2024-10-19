@@ -20,7 +20,7 @@ let in_setup = true
 let dt = 0.01;
 
 // canvas parameters
-let pxpm = 60;
+let pxpm = 55;
 let canvas_height = 600
 let canvas_width = 900
 
@@ -42,25 +42,14 @@ function preload() {
 
 function setup() {
     // set up sliders and labels
-    m1_slider = createSlider(0, 10, .1, 0.1)
-    m2_slider = createSlider(0, 10, 10, 0.1)
+    m1_slider = createSlider(0.1, 10, 0.1, 0.1)
+    m2_slider = createSlider(0.1, 10, 10, 0.1)
     x1_slider = createSlider(0, 5, 1, 0.1)
     x2_slider = createSlider(-5, 0, -1, 0.1)
     v1_slider = createSlider(-10, 0, -2, 0.1)
     v2_slider = createSlider(0, 10, 2, 0.1)
     e_slider = createSlider(0, 1, 1, 0.05)
-    slider_list = [m1_slider, m2_slider, x1_slider, x2_slider, v1_slider, v2_slider, e_slider]
-    var_name_list = ["m1", "m2", "x1", "x2", "v1", "v2", "e"]
-    slider_spacing = 30
-    for ([i, slider] of slider_list.entries()) {
-        let pos_y = 20 + i*slider_spacing
-        //console.log(slider_list.entries())
-        slider.position(canvas_width-200, pos_y)
-        label = createP(var_name_list[i])
-        label.position(canvas_width-260, pos_y-15)
-        label.addClass("oncanvas-text")
-    }
-    
+    update_sliders()
     // set up control buttonss
     play_pause = createSpan("play_circle")
     play_pause.addClass("material-icons")
@@ -78,6 +67,7 @@ function setup() {
 }
 
 function draw() {
+    
     if (running) {
         if ((x1 + w1) > (width / 2 / pxpm) || (x2 - w1) < -(width / 2 / pxpm)) {
             running = false
@@ -101,7 +91,9 @@ function draw() {
     }
     
 
-    background(0);
+    background(0)
+    draw_background()
+    update_sliders()
     translate(canvas_width/2, canvas_height); // move origin to bottom center
     scale(pxpm, -pxpm); // set scale to meter, flip y axis
 
@@ -140,4 +132,48 @@ function reset_state() {
     in_setup = true
     play_pause.html("play_circle")
     initial_state()
+}
+function update_sliders(
+    slider_list = [m1_slider, m2_slider, x1_slider, x2_slider, v1_slider, v2_slider, e_slider],
+    label_list = ["m1", "m2", "x1", "x2", "v1", "v2", "e"],
+    unit_list = ["kg", "kg", "m", "m", "m/s", "m/s", ""],
+    slider_spacing = 30
+) {
+    push()
+    for ([i, slider] of slider_list.entries()) {
+        let pos_y = 20 + i*slider_spacing
+        let label_text = label_list[i]
+        slider.position(canvas_width-200, pos_y)
+        fill("#FFFFFF")
+        textSize(15)
+        text(`${label_text} = ${slider.value()} ${unit_list[i]}`, canvas_width-285, pos_y+17)
+    }
+    pop()
+}
+function draw_background(n = 1, r1 = -8, r2 = 7) {
+    push()
+    stroke(100);  // white color for the axis
+    strokeWeight(1);
+    
+    // Draw the main horizontal axis
+    centerX = width / 2
+    let centerY = height / 2;
+    line(0, centerY, width, centerY);
+    fill(100);
+    triangle(width, centerY, width-10, centerY-5, width-10, centerY+5)
+    // Add labels every n units along the x-axis
+    for (let x = r1; x <= r2; x += n) {
+        push()
+            translate(centerX, 0)
+            strokeWeight(x == 0 ? 2 : 1);
+            let tick_len = x == 0 ? 8 : 4
+            line(x*pxpm, centerY - tick_len, x*pxpm, centerY + tick_len);  // small ticks for each label
+            push()
+                noStroke();
+                textAlign(CENTER, TOP);
+                text(x, x*pxpm, centerY + 20);  // display the x-coordinate as a label
+            pop()
+        pop()
+    }
+    pop()
 }

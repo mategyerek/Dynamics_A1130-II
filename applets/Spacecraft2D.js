@@ -59,6 +59,9 @@ let graph1,graph2;
 let dataX1, dataX2;
 let dataY1, dataY2;
 
+//buttons, dropdowns
+let xDropdown, yDropdown;
+let addGraph;
 
 
 function euclidNorm(x1,x2) {
@@ -139,8 +142,6 @@ function setup() {
     yDropdown.option("t");
     
     yDropdown.position(scrWidth+2*spMargin+50,spMargin+73);
-
-    //yDropdown.changed();
 
     //create add graph button
     addGraph = createButton("Add graph");
@@ -462,10 +463,10 @@ function draw() {
 
     // remove plot buttons
     if (numGraphs>0) {
-        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY,deleteGraph,1,removeSize);
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY,deleteGraph1,1,removeSize);
     }
     if (numGraphs>1) {
-        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY+graphH+spMargin,deleteGraph,2,removeSize);
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY+graphH+spMargin,deleteGraph2,2,removeSize);
     }
     pop();
 }
@@ -508,10 +509,14 @@ function createDeleteButton(x, y, func, arg=null, size = 10, primaryColor = "red
 
     pop();
 }
-function deleteGraph() {
+function deleteGraph1() {
     numGraphs--;
     graph1Xdata = graph2Xdata;
     graph1Ydata = graph2Ydata;
+}
+
+function deleteGraph2() {
+    numGraphs--;
 }
 
 function mouseClicked() {

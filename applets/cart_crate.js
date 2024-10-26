@@ -5,6 +5,8 @@ let h_slider;
 let w_slider;
 let mode_selector;
 
+let cg;
+
 let m;
 let a;
 let mu;
@@ -15,8 +17,10 @@ let cart_h = 1.5;
 let cart_w = 6;
 let x;
 let v;
+let x_crate;
+let v_crate;
 
-let Ff;
+let sliding = false;
 let M;
 
 let g = 9.81;
@@ -29,10 +33,16 @@ let running = false;
 let in_setup = true;
 let dt = 0.01;
 
+function preload() {
+	cg = loadImage("graphics/cg.png");
+	superheavy = loadImage("graphics/superheavy.png");
+	transporter = loadImage("graphics/transporter.png");
+}
+
 function setup() {
 	m_slider = createSlider(0.1, 10, 1, 0.1);
     a_slider = createSlider(-10, 10, 0, 0.1);
-    mu_slider = createSlider(0, 5, 1, 0.1);
+    mu_slider = createSlider(0, 3, 1, 0.1);
 	h_slider = createSlider(0.5, 10, 5, 0.1);
 	w_slider = createSlider(0.2, 5, 2, 0.1);
 	mode_selector = createSelect();
@@ -60,10 +70,28 @@ function draw() {
 	h = h_slider.value();
 	w = w_slider.value();
 	mu = mu_slider.value();
+
+	let ff = m * a;
+	let ff_max = mu * m * g;
+	if (abs(ff) > ff_max) {
+		ff = ff_max * ff/abs(ff);
+		sliding = true;
+	}
+	else {sliding = false}
+	let M = -ff*h/2
+	let r1 = (m*g-M/w)/2;
+	let r2 = (m*g+M/w)/2;
+	let arrow_offset = -ff*h/2/(m*g);
+
 	if (running) {
 		v += a * dt;
 		x += v * dt;
+
+		v_crate += ff/m*dt;
+		x_crate += v_crate*dt;
+		
 	}
+	
 	
 	background(0);
 	update_sliders()
@@ -71,20 +99,28 @@ function draw() {
 	scale(pxpm, -pxpm)
 	noStroke()
 	
-	fill("blue")
-	rect(x, 0, cart_w, cart_h)
-	fill("grey")
-	let x_crate = x + (cart_w - w) / 2
-	rect(x_crate, cart_h, w, h)
+	push()
+	translate(x, cart_h);
+	scale(1,-1);
+	image(transporter, 0, 0, cart_w, cart_h);
+	pop()
+	
+	push()
+	translate(x_crate, cart_h+h);
+	scale(1, -1)
+	image(superheavy, 0, 0, w, h);
+	pop()
+
+	let imsize = 0.5
+	image(cg, x_crate+w/2-imsize/2, cart_h+h/2-imsize/2, imsize, imsize)
 
 	// gravity
-	draw_arrow(x_crate + w/2, cart_h + h/2 +  m*g*arrowscale, x_crate + w/2, cart_h + h/2, "yellow")
+	draw_arrow(x_crate + w/2, cart_h + h/2 +  m*g*arrowscale, x_crate + w/2, cart_h + h/2, "white")
 
 	// friction
-	let ff = m * a;
-	draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01)
+	draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, sliding ? "orange" : "yellow")
 
-	let M = -ff*h/2
+	
 	// options
 	switch (mode_selector.value()) {
 		case "resultant force and moment":
@@ -96,14 +132,13 @@ function draw() {
 			break;
 		case "force pair":
 			// corner arrows
-			let r1 = (m*g-M/w)/2;
-			let r2 = (m*g+M/w)/2;
+			
 			draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "green", 0.06);
 			draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "green", 0.06);
+			console.log(r1)
 			break;
 		case "resultant force":
 			// sliding arrow
-			let arrow_offset = -ff*h/2/(m*g);
 			draw_arrow(x_crate + w/2 + arrow_offset, cart_h, x_crate + w/2 + arrow_offset, cart_h + m*g*arrowscale, "pink", 0.06);
 			break;
 	}
@@ -119,6 +154,8 @@ function initial_state() {
 	h = h_slider.value();
 	w = w_slider.value();
 	x = (canvas_width / pxpm - cart_w) / 2;
+	x_crate = x + (cart_w - w) / 2;
+	v_crate = 0;
 	v = 0;
 }
 

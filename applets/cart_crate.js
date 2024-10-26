@@ -4,6 +4,7 @@ let mu_slider;
 let h_slider;
 let w_slider;
 let mode_selector;
+let message;
 
 let cg;
 
@@ -20,7 +21,8 @@ let v;
 let x_crate;
 let v_crate;
 
-let sliding = false;
+let slipping = false;
+let tipping = false;
 let M;
 
 let g = 9.81;
@@ -47,14 +49,20 @@ function setup() {
 	w_slider = createSlider(0.2, 5, 2, 0.1);
 	mode_selector = createSelect();
 	mode_selector.position(20, 15)
-	mode_selector.option("resultant force and moment");
 	mode_selector.option("force pair");
+	mode_selector.option("resultant force and moment");
 	mode_selector.option("resultant force");
 	play_pause = createSpan("play_circle");
     play_pause.addClass("material-icons");
     play_pause.addClass("icon-btn");
-    play_pause.position(20, canvas_height-55)
-	play_pause.mousePressed(toggle_loop)
+    play_pause.position(15, canvas_height-55);
+	play_pause.mousePressed(toggle_loop);
+	reset = createSpan("stop_circle");
+    reset.addClass("material-icons");
+    reset.addClass("icon-btn");
+    reset.position(60, canvas_height-55);
+	reset.mousePressed(initial_state);
+
 
     update_sliders();
 	initial_state()
@@ -71,30 +79,62 @@ function draw() {
 	w = w_slider.value();
 	mu = mu_slider.value();
 
-	let ff = m * a;
-	let ff_max = mu * m * g;
-	if (abs(ff) > ff_max) {
-		ff = ff_max * ff/abs(ff);
-		sliding = true;
+	let ff;
+	let ff_slip;
+	let ff_noslip = m*a; // no slip
+	if (v-v_crate > 0) {
+		ff_slip = mu*m*g; // slip
 	}
-	else {sliding = false}
-	let M = -ff*h/2
-	let r1 = (m*g-M/w)/2;
-	let r2 = (m*g+M/w)/2;
-	let arrow_offset = -ff*h/2/(m*g);
+	else if (v-v_crate < 0) {
+		ff_slip = -mu*m*g;
+	}
+	else if (a > 0) {
+		ff_slip = mu*m*g
+	}
+	else if (a < 0) {
+		ff_slip = -mu*m*g
+	}
+	else {
+		ff_slip = 0;
+	}
+	if (abs(ff_noslip) > abs(ff_slip)) {
+		ff = ff_slip;
+		slipping = true;
+	}
+	else {
+		ff = ff_noslip;
+		slipping = false;
+	}
 
+	let M = -ff*h/2
+	let r2 = m*g/2+M/w;
+	let r1 = m*g/2-M/w;
+	let arrow_offset = a / g * h/2;
+	if (r1 <= 0 || r2 <= 0) {
+		tipping = true;
+		r1 = max(r1, 0);
+		r2 = max(r2, 0);
+		arrow_offset = arrow_offset/abs(arrow_offset) * w/2;
+	}
+	else {
+		tipping = false;
+	}
+
+	
 	if (running) {
 		v += a * dt;
 		x += v * dt;
 
-		v_crate += ff/m*dt;
-		x_crate += v_crate*dt;
+		//this must be bugfixed
+		v_crate += ff / m * dt;
+		x_crate += v_crate * dt;
 		
 	}
 	
 	
 	background(0);
-	update_sliders()
+	update_sliders();
+	update_info();
 	translate(0, canvas_height)
 	scale(pxpm, -pxpm)
 	noStroke()
@@ -118,7 +158,7 @@ function draw() {
 	draw_arrow(x_crate + w/2, cart_h + h/2 +  m*g*arrowscale, x_crate + w/2, cart_h + h/2, "white")
 
 	// friction
-	draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, sliding ? "orange" : "yellow")
+	draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
 
 	
 	// options
@@ -135,7 +175,6 @@ function draw() {
 			
 			draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "green", 0.06);
 			draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "green", 0.06);
-			console.log(r1)
 			break;
 		case "resultant force":
 			// sliding arrow
@@ -157,12 +196,14 @@ function initial_state() {
 	x_crate = x + (cart_w - w) / 2;
 	v_crate = 0;
 	v = 0;
+	running = false;
+	play_pause.html("play_circle");
 }
 
 function update_sliders(
-    slider_list = [m_slider, a_slider, mu_slider, h_slider, w_slider],
-    label_list = ["m", "a", "mu", "h", "w"],
-    unit_list = ["kg", "m/s", "", "m", "m"],
+    slider_list = [m_slider, mu_slider, h_slider, w_slider, a_slider],
+    label_list = ["m", "mu", "h", "w", "a"],
+    unit_list = ["kg", "", "m", "m", "m/s^2"],
     slider_spacing = 30
 ) {
     push()
@@ -172,7 +213,7 @@ function update_sliders(
         slider.position(canvas_width-200, pos_y)
         fill("#FFFFFF")
         textSize(15)
-        text(`${label_text} = ${slider.value()} ${unit_list[i]}`, canvas_width-285, pos_y+17)
+        text(`${label_text} = ${slider.value()} ${unit_list[i]}`, canvas_width-290, pos_y+17)
     }
     pop()
 }
@@ -180,4 +221,19 @@ function update_sliders(
 function toggle_loop() {
     running = !running
     play_pause.html(running ? "pause_circle" : "play_circle")
+}
+function update_info() {
+	push()
+	textSize(20)
+	fill("white")
+	if (tipping) {
+		message = text("Tipping", 650, 200);
+	}
+	if (slipping) {
+		message = text("Slipping", 650, 240);
+	}
+	else {
+		message = text("");
+	}
+	pop()
 }

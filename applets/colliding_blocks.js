@@ -21,8 +21,8 @@ let dt = 0.01;
 
 // canvas parameters
 let pxpm = 55;
-let canvas_height = 600
-let canvas_width = 900
+let canvas_height = 600;
+let canvas_width = 900;
 
 // buttons
 let play_pause;

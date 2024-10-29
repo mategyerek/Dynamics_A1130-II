@@ -47,7 +47,7 @@ function preload() {
 function setup() {
 	m_slider = createSlider(0.1, 10, 1, 0.1);
     a_slider = createSlider(-10, 10, 0, 0.1);
-    mu_slider = createSlider(0, 3, 1, 0.1);
+    mu_slider = createSlider(0, 2, 0.5, 0.01);
 	h_slider = createSlider(0.5, 10, 5, 0.1);
 	w_slider = createSlider(0.2, 5, 2, 0.1);
 	mode_selector = createSelect();
@@ -81,6 +81,7 @@ function draw() {
 		h = h_slider.value();
 		w = w_slider.value();
 		mu = mu_slider.value();
+		x_crate = x + (cart_w - w) / 2;
 	}
 	
 	let arrowscale = 0.07/(log(m+1));
@@ -182,15 +183,17 @@ function draw() {
 	
 
 	// gravity
-	let x_arrow;
+	let x_cg;
 	if (theta > 0) {
-		x_arrow = x_crate - h/2*sin(theta) + w/2*cos(theta);
+		x_cg = x_crate - h/2*sin(theta) + w/2*cos(theta);
 	}
 	else {
-		x_arrow = x_crate - h/2*sin(theta) - w/2*cos(theta) + w;
+		x_cg = x_crate - h/2*sin(theta) - w/2*cos(theta) + w;
 	}
-	let y_arrow = cart_h + w/2 * abs(sin(theta)) + h/2 *cos(theta);
-	draw_arrow(x_arrow, y_arrow + m*g*arrowscale, x_arrow, y_arrow, "white")
+	let y_cg = cart_h + w/2 * abs(sin(theta)) + h/2 *cos(theta);
+	draw_arrow(x_cg, y_cg + m*g*arrowscale, x_cg, y_cg, "white")
+	// inertial force(s)
+	draw_arrow(x_cg, y_cg, x_cg + a*m*arrowscale, y_cg, "lightgreen")
 
 	// friction
 	if (!tipping) {
@@ -213,12 +216,12 @@ function draw() {
 		case "force pair":
 			// corner arrows
 			
-			draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "green", 0.06);
-			draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "green", 0.06);
+			draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "red", 0.06);
+			draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "red", 0.06);
 			break;
 		case "resultant force":
 			// sliding arrow
-			draw_arrow(x_crate + w/2 + arrow_offset, cart_h, x_crate + w/2 + arrow_offset, cart_h + m*g*arrowscale, "pink", 0.06);
+			draw_arrow(x_crate + w/2 + arrow_offset, cart_h, x_crate + w/2 + arrow_offset, cart_h + m*g*arrowscale, "red", 0.06);
 			break;
 	}
 
@@ -246,7 +249,7 @@ function initial_state() {
 function update_sliders(
     slider_list = [m_slider, mu_slider, h_slider, w_slider, a_slider],
     label_list = ["m", "mu", "h", "w", "a"],
-    unit_list = ["kg", "", "m", "m", "m/s^2"],
+    // unit_list = ["kg", "", "m", "m", "m/s^2"],
     slider_spacing = 30
 ) {
     push()

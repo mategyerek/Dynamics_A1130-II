@@ -20,6 +20,9 @@ let x;
 let v;
 let x_crate;
 let v_crate;
+let theta = 0;
+let omega = 0;
+let alpha = 0.2; // controls tipping speed
 
 let slipping = false;
 let tipping = false;
@@ -72,23 +75,20 @@ function setup() {
 
 
 function draw() {
-	a = a_slider.value();
-	m = m_slider.value();
+	if (in_setup) {
+		a = a_slider.value();
+		m = m_slider.value();
+		h = h_slider.value();
+		w = w_slider.value();
+		mu = mu_slider.value();
+	}
+	
 	let arrowscale = 0.07/(log(m+1));
-	h = h_slider.value();
-	w = w_slider.value();
-	mu = mu_slider.value();
-
 	let ff;
 	let ff_slip;
 	let ff_noslip = m*a; // no slip
-	if (v-v_crate > 0) {
-		ff_slip = mu*m*g; // slip
-	}
-	else if (v-v_crate < 0) {
-		ff_slip = -mu*m*g;
-	}
-	else if (a > 0) {
+
+	if (a > 0) {
 		ff_slip = mu*m*g
 	}
 	else if (a < 0) {
@@ -109,7 +109,7 @@ function draw() {
 	let M = -ff*h/2
 	let r2 = m*g/2+M/w;
 	let r1 = m*g/2-M/w;
-	let arrow_offset = a / g * h/2;
+	let arrow_offset = -a / g * h/2;
 	if (r1 <= 0 || r2 <= 0) {
 		tipping = true;
 		r1 = max(r1, 0);
@@ -125,9 +125,19 @@ function draw() {
 		v += a * dt;
 		x += v * dt;
 
-		//this must be bugfixed
 		v_crate += ff / m * dt;
 		x_crate += v_crate * dt;
+
+		if (tipping) {
+			omega += a*alpha*dt;
+			theta += omega*dt;
+			if (theta > PI/2) {
+				theta = PI / 2;
+			}
+			if (theta < -PI/2) {
+				theta = -PI / 2;
+			}
+		}
 		
 	}
 	
@@ -146,19 +156,49 @@ function draw() {
 	pop()
 	
 	push()
-	translate(x_crate, cart_h+h);
-	scale(1, -1)
-	image(superheavy, 0, 0, w, h);
+	if (theta >= 0) {
+		translate(x_crate, cart_h);
+		rotate(theta)
+		translate(0, h)
+		push();
+		scale(1, -1)
+		image(superheavy, 0, 0, w, h);
+		pop();
+	}
+	else {
+		translate(x_crate+w, cart_h);
+		rotate(theta)
+		translate(-w, h);
+		push();
+		scale(1, -1)
+		image(superheavy, 0, 0, w, h);
+		pop();
+	}
+	translate(w/2, -h/2)
+	let imsize = 0.5
+	image(cg, -imsize/2, -imsize/2, imsize, imsize)
 	pop()
 
-	let imsize = 0.5
-	image(cg, x_crate+w/2-imsize/2, cart_h+h/2-imsize/2, imsize, imsize)
+	
 
 	// gravity
-	draw_arrow(x_crate + w/2, cart_h + h/2 +  m*g*arrowscale, x_crate + w/2, cart_h + h/2, "white")
+	let x_arrow;
+	if (theta > 0) {
+		x_arrow = x_crate - h/2*sin(theta) + w/2*cos(theta);
+	}
+	else {
+		x_arrow = x_crate - h/2*sin(theta) - w/2*cos(theta) + w;
+	}
+	let y_arrow = cart_h + w/2 * abs(sin(theta)) + h/2 *cos(theta);
+	draw_arrow(x_arrow, y_arrow + m*g*arrowscale, x_arrow, y_arrow, "white")
 
 	// friction
-	draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+	if (!tipping) {
+		draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+	}
+	else {
+		draw_arrow(x_crate + w/2 + arrow_offset, cart_h-0.01, x_crate + w/2 + arrow_offset + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+	}
 
 	
 	// options
@@ -196,7 +236,10 @@ function initial_state() {
 	x_crate = x + (cart_w - w) / 2;
 	v_crate = 0;
 	v = 0;
+	theta = 0;
+	omega = 0;
 	running = false;
+	in_setup = true;
 	play_pause.html("play_circle");
 }
 
@@ -213,19 +256,20 @@ function update_sliders(
         slider.position(canvas_width-200, pos_y)
         fill("#FFFFFF")
         textSize(15)
-        text(`${label_text} = ${slider.value()} ${unit_list[i]}`, canvas_width-290, pos_y+17)
+        text(`${label_text} = ${slider.value()}`, canvas_width-290, pos_y+17)
     }
     pop()
 }
 
 function toggle_loop() {
-    running = !running
-    play_pause.html(running ? "pause_circle" : "play_circle")
+	in_setup = false;
+    running = !running;
+    play_pause.html(running ? "pause_circle" : "play_circle");
 }
 function update_info() {
-	push()
-	textSize(20)
-	fill("white")
+	push();
+	textSize(20);
+	fill("white");
 	if (tipping) {
 		message = text("Tipping", 650, 200);
 	}
@@ -235,5 +279,5 @@ function update_info() {
 	else {
 		message = text("");
 	}
-	pop()
+	pop();
 }

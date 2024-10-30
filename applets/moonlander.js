@@ -2,22 +2,29 @@
 
 // numerical variables
 let yg;
-let v;
+let xg;
+let vy;
+let vx;
 let theta;
 let omega;
+let E_kin;
 
 let k;
 let m;
 
 let d;
 let h;
+let R;
+let beta;
 
 let g;
 
 // simulation parameters
 let running = false;
-let in_setup = true
-let dt = 0.01;
+let in_setup = true;
+let state = 0;
+let prev_state = 0;
+let dt = 0.005;
 
 // canvas parameters
 pxpm = 50;
@@ -41,12 +48,12 @@ function preload() {
 
 function setup() {
     // set up sliders and labels
-	v0_slider = createSlider(0, 5, 1, 0.1)
-	k_slider = createSlider(0, 5, 1, 0.1)
-	m_slider = createSlider(0, 5, 1, 0.1)
-	d_slider = createSlider(0, 5, 3, 0.1)
-	h_slider = createSlider(0, 5, 2, 0.1)
-	g_slider = createSlider(0, 5, 1, 0.1)
+	v0_slider = createSlider(0, 5, 3, 0.1);
+	k_slider = createSlider(0, 5, 1, 0.1);
+	m_slider = createSlider(0, 5, 1, 0.1);
+	d_slider = createSlider(0, 10, 8, 0.1);
+	h_slider = createSlider(0, 8, 3, 0.1);
+	g_slider = createSlider(0, 5, 1, 0.1);
 	update_sliders();
     // set up control buttonss
     play_pause = createSpan("play_circle");
@@ -65,23 +72,78 @@ function setup() {
 }
 
 function draw() {
-
+    console.log(state);
+    if (in_setup) {
+        initial_state();
+    }
     if (running) {
-        yg -= v*dt;
+        switch (state) {
+        case 0:
+            yg += vy*dt;
+            if (yg-h*cos(theta)+d/2*sin(theta) < 0) {
+                state = 1;
+            }
+            break
+        case 1:
+            let v1 = d/2/R*vy;
+            vy = v1*d/2/R;
+            vx = v1*h/R;
+            console.log(vx);
+            omega = rms(vx, vy)/R;
+            state = 2;
+            break
+        case 2:
+            theta += omega*dt;
+            yg += vy*dt;
+            xg += vx*dt;
+            if (yg-h*cos(theta)-d/2*sin(theta) < 0) {
+                state = 3;
+            }
+            break
+        case 3:
+            let v2 = d/2/R*vy;
+            vy = -v2*d/2/R;
+            vx = v2*h/R;
+            omega = rms(vx, vy)/R;
+            state = 4;
+            break
+        case 4:
+            // some numerical? problems with tan! should be imroved
+            if ((yg <= h && vy < 0) || abs(beta + theta + 0.1) >= PI/2) {
+                state = 5;
+            }
+            vy -= g*dt;
+            vx = -tan(beta + theta)*vy;
+            xg += vx*dt;
+            yg += vy*dt;
+            omega = rms(vx, vy)/R*abs(vy)/vy;
+            theta += omega*dt;
+            break;
+        case 5: // end
+            toggle_loop();
+        }
+
+        if (state != prev_state) { // pause on state change
+            prev_state = state;
+            toggle_loop();
+        } 
     }
 
     background(0);
     update_sliders();
     translate(0, canvas_height); // move origin to bottom left
     scale(pxpm, -pxpm); // set scale to meter, flip y axis
-	let MIDDLE = width/pxpm/2
+	
 
     // draw lander skeleton
 	push();
 	stroke("red");
 	strokeWeight(0.1);
-    translate(MIDDLE, yg)
+    translate(xg, yg);
 	point(0, 0);
+    draw_arrow(0, 0, 0, vy, "green");
+    draw_arrow(0, 0, vx, 0, "green");
+    draw_arrow(0, 0, vx, vy, "lightgreen");
 	rotate(theta);
 	translate(0, -h);
 	point(d/2, 0);
@@ -98,14 +160,21 @@ function toggle_loop() {
 
 function initial_state() {
     // set states to slider values
+    let MIDDLE = canvas_width/pxpm/2;
+    state = 0;
+    prev_state = 0;
 	yg = 5;
-	v = v0_slider.value();
+    xg = MIDDLE;
+	vy = -v0_slider.value();
+    vx = 0;
 	k = k_slider.value();
 	m = m_slider.value();
 	d = d_slider.value();
 	h = h_slider.value();
 	g = g_slider.value();
-    theta = -0.04;
+    theta = -0.02;
+    beta = atan(h / (d/2))
+    R = rms(d/2, h);
 }
 function reset_state() {
     running = false;

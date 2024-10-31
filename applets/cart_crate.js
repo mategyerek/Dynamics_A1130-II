@@ -180,54 +180,51 @@ function draw() {
 	image(cg, -imsize/2, -imsize/2, imsize, imsize)
 	pop()
 
-	
+	// turn off forces when running
+	if (!running){
+		// gravity
+		let x_cg;
+		if (theta > 0) {
+			x_cg = x_crate - h/2*sin(theta) + w/2*cos(theta);
+		}
+		else {
+			x_cg = x_crate - h/2*sin(theta) - w/2*cos(theta) + w;
+		}
+		let y_cg = cart_h + w/2 * abs(sin(theta)) + h/2 *cos(theta);
+		draw_arrow(x_cg, y_cg + m*g*arrowscale, x_cg, y_cg, "white")
+		// inertial force(s)
+		draw_arrow(x_cg, y_cg, x_cg + a*m*arrowscale, y_cg, "lightgreen")
 
-	// gravity
-	let x_cg;
-	if (theta > 0) {
-		x_cg = x_crate - h/2*sin(theta) + w/2*cos(theta);
-	}
-	else {
-		x_cg = x_crate - h/2*sin(theta) - w/2*cos(theta) + w;
-	}
-	let y_cg = cart_h + w/2 * abs(sin(theta)) + h/2 *cos(theta);
-	draw_arrow(x_cg, y_cg + m*g*arrowscale, x_cg, y_cg, "white")
-	// inertial force(s)
-	draw_arrow(x_cg, y_cg, x_cg + a*m*arrowscale, y_cg, "lightgreen")
+		// friction
+		if (!tipping) {
+			draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+		}
+		else {
+			draw_arrow(x_crate + w/2 + arrow_offset, cart_h-0.01, x_crate + w/2 + arrow_offset + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+		}
 
-	// friction
-	if (!tipping) {
-		draw_arrow(x_crate + w/2, cart_h-0.01, x_crate + w/2 + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
+		
+		// options
+		switch (mode_selector.value()) {
+			case "resultant force and moment":
+				// resultant force and moment
+				if (M != 0) {
+					draw_moment(x_crate + w/2, cart_h + h/2, 0.5*M*arrowscale, "red")
+				}
+				draw_arrow(x_crate + w/2, cart_h, x_crate + w/2, cart_h + m*g*arrowscale, "red", 0.06);
+				break;
+			case "force pair":
+				// corner arrows
+				
+				draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "red", 0.06);
+				draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "red", 0.06);
+				break;
+			case "resultant force":
+				// sliding arrow
+				draw_arrow(x_crate + w/2 + arrow_offset, cart_h, x_crate + w/2 + arrow_offset, cart_h + m*g*arrowscale, "red", 0.06);
+				break;
+		}
 	}
-	else {
-		draw_arrow(x_crate + w/2 + arrow_offset, cart_h-0.01, x_crate + w/2 + arrow_offset + ff * arrowscale, cart_h-0.01, slipping ? "orange" : "yellow")
-	}
-
-	
-	// options
-	switch (mode_selector.value()) {
-		case "resultant force and moment":
-			// resultant force and moment
-			if (M != 0) {
-				draw_moment(x_crate + w/2, cart_h + h/2, 0.5*M*arrowscale, "red")
-			}
-			draw_arrow(x_crate + w/2, cart_h, x_crate + w/2, cart_h + m*g*arrowscale, "red", 0.06);
-			break;
-		case "force pair":
-			// corner arrows
-			
-			draw_arrow(x_crate, cart_h, x_crate, cart_h + r1*arrowscale, "red", 0.06);
-			draw_arrow(x_crate + w, cart_h, x_crate + w, cart_h + r2*arrowscale, "red", 0.06);
-			break;
-		case "resultant force":
-			// sliding arrow
-			draw_arrow(x_crate + w/2 + arrow_offset, cart_h, x_crate + w/2 + arrow_offset, cart_h + m*g*arrowscale, "red", 0.06);
-			break;
-	}
-
-	
-	
-
 }
 
 function initial_state() {
@@ -276,8 +273,8 @@ function update_info() {
 	if (tipping) {
 		message = text("Tipping", 650, 200);
 	}
-	if (slipping) {
-		message = text("Slipping", 650, 240);
+	else if (slipping) {
+		message = text("Slipping", 650, 200);
 	}
 	else {
 		message = text("");

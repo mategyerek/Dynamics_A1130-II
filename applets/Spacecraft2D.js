@@ -188,12 +188,12 @@ function setup() {
     play_pause.addClass("material-icons");
     play_pause.addClass("icon-btn");
     play_pause.style('font-size',`${buttonSize}px`);
-    play_pause.position(scrWidth-2*buttonSize-spMargin, spMargin);
+    play_pause.position(spMargin, scrHeight-buttonSize-spMargin);
     reset = createSpan("stop_circle");
     reset.addClass("material-icons");
     reset.addClass("icon-btn");
     reset.style('font-size',`${buttonSize}px`);
-    reset.position(scrWidth-buttonSize-spMargin, spMargin);
+    reset.position(buttonSize+spMargin, scrHeight-buttonSize-spMargin);
     play_pause.mousePressed(toggle_loop);
     reset.mousePressed(reset_state);
 }
@@ -369,10 +369,10 @@ function draw() {
         logCount++;
     
 
-    
+    } else {image(lander,x,y);}
 
     // draw velocity vector
-    {
+    if (speedX != 0 && speedY != 0) {
     push();
 
     fill(velColor)
@@ -402,7 +402,7 @@ function draw() {
     }
 
     // draw acceleration vector
-    if (keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)){
+    if ((keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)) && running){
         push();
     
         fill(accColor);
@@ -430,7 +430,7 @@ function draw() {
         text("a", labelVec.x, labelVec.y); // Position "a" slightly beyond the tip of the arrow
     
         }
-    } else {image(lander,x,y);}
+
 
     // draw arrow pointing towards car
     {

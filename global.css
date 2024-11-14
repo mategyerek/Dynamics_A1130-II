@@ -15,6 +15,7 @@ canvas {
   position: absolute;
   user-select: none;
 }
+
 .icon-btn:hover {
   color:#FFFF00;
 }

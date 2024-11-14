@@ -15,8 +15,7 @@ let spWidth = 400;
 
 let lander, landerLeft, landerRight, landerUp, landerDown, landerLeftUp, landerRightUp, landerRightDown, landerLeftDown, car;
 
-let gameStarted = false;
-
+let mouseIsClicked = false;
 
 // SI plottables - 100 px = 1 m
 let posXSI = [];
@@ -46,18 +45,31 @@ let textColor = "white";
 let spMargin = 10;
 
 //graphs
+let removeSize = 10;
+
 let numGraphs = 0;
 
 let graphX = spMargin;
 let graphY = 2*spMargin+100
-let graphW = spWidth-2*spMargin;
+let graphW = spWidth-2*spMargin-removeSize-5;
 let graphH = (scrHeight-4*spMargin-100)/2;
 
 let graph1,graph2;
 let dataX1, dataX2;
 let dataY1, dataY2;
 
-let removeSize = 10;
+//buttons, dropdowns
+let xDropdown, yDropdown;
+let addGraph;
+
+let play_pause, reset;
+let buttonSize = 50;
+let running = false;
+let in_setup = true
+
+//stars
+let stars = [];
+let numStars = 100; // Number of stars in the background
 
 function euclidNorm(x1,x2) {
     return Math.sqrt(Math.pow(x1,2)+Math.pow(x2,2));
@@ -87,19 +99,40 @@ function preload() {
     font = loadFont("fonts/Inter_18pt-ExtraLight.ttf");
 }
 
+function initial_state() {
+    posXSI = [0];
+    posYSI = [0];
+    absDist = [0];
+    displacement = [0];
+    velXSI = [0];
+    velYSI = [0];
+    speed = [0];
+    accXSI = [0];
+    accYSI = [0];
+    absAcc = [0];
+    t = [0];
+    logCount = 0;
+
+    speedX = 0;
+    speedY = 0;
+    absX = 0;
+    absY = 0;
+    
+    stars = [];
+
+    // initialize star field
+    for (let i = 0; i < numStars; i++) {
+        stars.push({
+            x: random(0, scrWidth),
+            y: random(0, scrHeight),
+            z: random(5, 15) // Star depth
+        });
+    }
+}
+
 function setup() {
     createCanvas(scrWidth+spWidth,scrHeight);
-    posXSI.push(0);
-    posYSI.push(0);
-    absDist.push(0);
-    displacement.push(0);
-    velXSI.push(0);
-    velYSI.push(0);
-    speed.push(0);
-    accXSI.push(0);
-    accYSI.push(0);
-    absAcc.push(0);
-    t.push(0);
+    initial_state();
 
     //dropdowns
     // x-axis dropdown
@@ -138,8 +171,6 @@ function setup() {
     
     yDropdown.position(scrWidth+2*spMargin+50,spMargin+73);
 
-    //yDropdown.changed();
-
     //create add graph button
     addGraph = createButton("Add graph");
     addGraph.size(0.25*spWidth,49);
@@ -151,6 +182,33 @@ function setup() {
 
     graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);
     graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);
+
+    // set up control buttons
+    play_pause = createSpan("play_circle");
+    play_pause.addClass("material-icons");
+    play_pause.addClass("icon-btn");
+    play_pause.style('font-size',`${buttonSize}px`);
+    play_pause.position(spMargin, scrHeight-buttonSize-spMargin);
+    reset = createSpan("stop_circle");
+    reset.addClass("material-icons");
+    reset.addClass("icon-btn");
+    reset.style('font-size',`${buttonSize}px`);
+    reset.position(buttonSize+spMargin, scrHeight-buttonSize-spMargin);
+    play_pause.mousePressed(toggle_loop);
+    reset.mousePressed(reset_state);
+}
+
+function toggle_loop() {
+    running = !running;
+    in_setup = running ? false : in_setup;
+    play_pause.html(running ? "pause_circle" : "play_circle");
+}
+
+function reset_state() {
+    running = false;
+    in_setup = true;
+    play_pause.html("play_circle");
+    initial_state();
 }
 
 function getSelectedData(selection) {
@@ -171,130 +229,150 @@ function getSelectedData(selection) {
 function addGraphPressed() {
     if (numGraphs<2) {
         numGraphs++;
-    } else if (numGraphs==0) {graph1 = new LinPlot2D(graphX,graphY,graphW,graphH);}
-    else if (numGraphs==1) {graph2 = new LinPlot2D(graphX,graphY+graphH+spMargin,graphW,graphH);}
-    gameStarted = true; // for future pause-unpause functionality
-    
-
+    }
 }
 
 function draw() {
     background(0);
+    // draw stars
+    for (let i = 0; i < stars.length; i++) {
+        let star = stars[i];
+        
+        if (running) {
+        star.x -= 0.1*speedX / star.z; // parallax effect
+        star.y -= 0.1*speedY / star.z;
+        }
+
+        // reset star position if it goes off-screen
+        if (star.x < 0) star.x = scrWidth;
+        if (star.x > scrWidth) star.x = 0;
+        if (star.y < 0) star.y = scrHeight;
+        if (star.y > scrHeight) star.y = 0;
+        
+        // draw star with varying size based on depth
+        push();
+        noStroke();
+        fill('white');
+        ellipse(star.x, star.y, 10 / star.z, 10 / star.z);
+        pop();
+    }
+    push();
     translate(scrWidth/2,scrHeight/2); //translate origin to middle
 
     imageMode(CENTER);
 
     dt = deltaTime/1000;
 
-    // handle keyboard events and logging
-    if (keyIsDown(65) && keyIsDown(68)) {
-        image(lander, x, y);
-        accXSI.push(0);
-        accYSI.push(0);
-
-    } else if (keyIsDown(65)) { // 'A' key
-        if (keyIsDown(83)) { // 'S' key
-            image(landerLeftDown, x, y);
-            speedX -= acceleration*dt;
-            speedY += acceleration*dt;
-            absX -= 0.5*acceleration*Math.pow(dt,2);
-            absY += 0.5*acceleration*Math.pow(dt,2);
-
-            accXSI.push(-acceleration/100);
-            accYSI.push(-acceleration/100); // note inverted y-axis
-
-        } else if (keyIsDown(87)) { // 'W' key
-            image(landerLeftUp, x, y);
-            speedX -= acceleration*dt;
-            speedY -= acceleration*dt;
-            absX -= 0.5*acceleration*Math.pow(dt,2);
-            absY -= 0.5*acceleration*Math.pow(dt,2);
-
-            accXSI.push(-acceleration/100);
-            accYSI.push(acceleration/100);
-
-        } else if (!keyIsDown(68)) { // 'D' key
-            image(landerLeft, x, y);
-            speedX -= acceleration*dt;
-            absX -= 0.5*acceleration*Math.pow(dt,2);
-
-            accXSI.push(-acceleration/100);
+    if (running) {
+        // handle keyboard events and logging
+        if (keyIsDown(65) && keyIsDown(68)) {
+            image(lander, x, y);
+            accXSI.push(0);
             accYSI.push(0);
-        }
-    } else if (keyIsDown(68)) { // 'D' key
-        if (keyIsDown(83)) { // 'S' key
-            image(landerRightDown, x, y);
-            speedX += acceleration*dt;
+
+        } else if (keyIsDown(65)) { // 'A' key
+            if (keyIsDown(83)) { // 'S' key
+                image(landerLeftDown, x, y);
+                speedX -= acceleration*dt;
+                speedY += acceleration*dt;
+                absX -= 0.5*acceleration*Math.pow(dt,2);
+                absY += 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(-acceleration/100);
+                accYSI.push(-acceleration/100); // note inverted y-axis
+
+            } else if (keyIsDown(87)) { // 'W' key
+                image(landerLeftUp, x, y);
+                speedX -= acceleration*dt;
+                speedY -= acceleration*dt;
+                absX -= 0.5*acceleration*Math.pow(dt,2);
+                absY -= 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(-acceleration/100);
+                accYSI.push(acceleration/100);
+
+            } else if (!keyIsDown(68)) { // 'D' key
+                image(landerLeft, x, y);
+                speedX -= acceleration*dt;
+                absX -= 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(-acceleration/100);
+                accYSI.push(0);
+            }
+        } else if (keyIsDown(68)) { // 'D' key
+            if (keyIsDown(83)) { // 'S' key
+                image(landerRightDown, x, y);
+                speedX += acceleration*dt;
+                speedY += acceleration*dt;
+                absX += 0.5*acceleration*Math.pow(dt,2);
+                absY += 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(acceleration/100);
+                accYSI.push(-acceleration/100);
+
+            } else if (keyIsDown(87)) { // 'W' key
+                image(landerRightUp, x, y);
+                speedX += acceleration*dt;
+                speedY -= acceleration*dt;
+                absX += 0.5*acceleration*Math.pow(dt,2);
+                absY -= 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(acceleration/100);
+                accYSI.push(acceleration/100);
+
+            } else if (!keyIsDown(65)) { // 'A' key
+                image(landerRight, x, y);
+                speedX += acceleration*dt;
+                absX += 0.5*acceleration*Math.pow(dt,2);
+
+                accXSI.push(acceleration/100);
+                accYSI.push(0);
+
+            }
+        } else if (keyIsDown(83) && !keyIsDown(87)) { // 'S' key without 'W'
+            image(landerDown, x, y);
             speedY += acceleration*dt;
-            absX += 0.5*acceleration*Math.pow(dt,2);
             absY += 0.5*acceleration*Math.pow(dt,2);
 
-            accXSI.push(acceleration/100);
+            accXSI.push(0);
             accYSI.push(-acceleration/100);
 
-        } else if (keyIsDown(87)) { // 'W' key
-            image(landerRightUp, x, y);
-            speedX += acceleration*dt;
+        } else if (keyIsDown(87) && !keyIsDown(83)) { // 'W' key without 'S'
+            image(landerUp, x, y);
             speedY -= acceleration*dt;
-            absX += 0.5*acceleration*Math.pow(dt,2);
             absY -= 0.5*acceleration*Math.pow(dt,2);
 
-            accXSI.push(acceleration/100);
+            accXSI.push(0);
             accYSI.push(acceleration/100);
 
-        } else if (!keyIsDown(65)) { // 'A' key
-            image(landerRight, x, y);
-            speedX += acceleration*dt;
-            absX += 0.5*acceleration*Math.pow(dt,2);
-
-            accXSI.push(acceleration/100);
+        } else {
+            image(lander, x, y);
+            accXSI.push(0);
             accYSI.push(0);
-
         }
-    } else if (keyIsDown(83) && !keyIsDown(87)) { // 'S' key without 'W'
-        image(landerDown, x, y);
-        speedY += acceleration*dt;
-        absY += 0.5*acceleration*Math.pow(dt,2);
 
-        accXSI.push(0);
-        accYSI.push(-acceleration/100);
+        // add linear term in position change
+        absX += speedX*dt;
+        absY += speedY*dt;
 
-    } else if (keyIsDown(87) && !keyIsDown(83)) { // 'W' key without 'S'
-        image(landerUp, x, y);
-        speedY -= acceleration*dt;
-        absY -= 0.5*acceleration*Math.pow(dt,2);
-
-        accXSI.push(0);
-        accYSI.push(acceleration/100);
-
-    } else {
-        image(lander, x, y);
-        accXSI.push(0);
-        accYSI.push(0);
-    }
-
-    // add linear term in position change
-    absX += speedX*dt;
-    absY += speedY*dt;
-
-    // logging part 2
+        // logging part 2
+        
+        posXSI.push(absX/100);
+        posYSI.push(-absY/100);
+        displacement.push(euclidNorm(posXSI[logCount],posYSI[logCount]));
+        absDist.push(absDist[logCount]+euclidNorm(posXSI[logCount+1]-posXSI[logCount],posYSI[logCount+1]-posYSI[logCount]));
+        velXSI.push(speedX/100);
+        velYSI.push(-speedY/100);
+        speed.push(euclidNorm(velXSI[logCount],velYSI[logCount]));
+        absAcc.push(euclidNorm(accXSI[logCount],accYSI[logCount]));
+        t.push(t[logCount]+dt);
+        logCount++;
     
-    posXSI.push(absX/100);
-    posYSI.push(-absY/100);
-    displacement.push(euclidNorm(posXSI[logCount],posYSI[logCount]));
-    absDist.push(absDist[logCount]+euclidNorm(posXSI[logCount+1]-posXSI[logCount],posYSI[logCount+1]-posYSI[logCount]));
-    velXSI.push(speedX/100);
-    velYSI.push(-speedY/100);
-    speed.push(euclidNorm(velXSI[logCount],velYSI[logCount]));
-    absAcc.push(euclidNorm(accXSI[logCount],accYSI[logCount]));
-    t.push(t[logCount]+dt);
-    logCount++;
 
-
-    
+    } else {image(lander,x,y);}
 
     // draw velocity vector
-    {
+    if (speedX != 0 && speedY != 0) {
     push();
 
     fill(velColor)
@@ -324,7 +402,7 @@ function draw() {
     }
 
     // draw acceleration vector
-    if (keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)){
+    if ((keyIsDown(65) || keyIsDown(83) || keyIsDown(87) || keyIsDown(68)) && running){
         push();
     
         fill(accColor);
@@ -352,7 +430,7 @@ function draw() {
         text("a", labelVec.x, labelVec.y); // Position "a" slightly beyond the tip of the arrow
     
         }
-    
+
 
     // draw arrow pointing towards car
     {
@@ -462,24 +540,66 @@ function draw() {
     }
 
     // remove plot buttons
-    push();
-    strokeWeight(2);
-    fill("red");
     if (numGraphs>0) {
-    stroke("red");
-    rect(graphX-removeSize/2,graphY,removeSize,removeSize);
-    stroke("white");
-    line(graphX-removeSize/2+2,graphY+2,graphX+removeSize/2-2,graphY+removeSize-2);
-    line(graphX-removeSize/2+2,graphY+removeSize-2,graphX+removeSize/2-2,graphY+2);
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY,deleteGraph1,1,removeSize);
     }
     if (numGraphs>1) {
-    stroke("red");
-    rect(graphX-removeSize/2,graphY+graphH+spMargin,removeSize,removeSize);
-    stroke("white");   
-    line(graphX-removeSize/2+2,graphY+graphH+spMargin+2,graphX+removeSize/2-2,graphY+graphH+spMargin+removeSize-2);
-    line(graphX-removeSize/2+2,graphY+graphH+spMargin+removeSize-2,graphX+removeSize/2-2,graphY+graphH+spMargin+2);
-    pop();
+        createDeleteButton(graphX-removeSize/2+scrWidth+spMargin+graphW,graphY+graphH+spMargin,deleteGraph2,2,removeSize);
     }
+    pop();
+    pop();
+    
+}
+
+function createDeleteButton(x, y, func, arg=null, size = 10, primaryColor = "red", secondaryColor = "white", edgeRadius = 0,
+    lineWeight = 2, strokeColor = color(200,0,0), sideStrokeWeight = 1, crossOffset = 2) {
+    /*
+    Creates a square-shaped delete button. Note that x and y are measured from the top-left corner of the canvas.
+    */
+    push();
+    resetMatrix();
+    // Set the primary color for the button
+    fill(primaryColor);
+    stroke(primaryColor);
+
+    // Optional stroke color handling
+    if (Math.abs(mouseX-x)<size && Math.abs(mouseY-y)<size) {
+        if (strokeColor != null) {
+            stroke(strokeColor);
+            strokeWeight(sideStrokeWeight);
+        } else {
+            stroke(primaryColor);
+        }
+        if (mouseIsPressed && mouseIsClicked) {
+            if (arg!=null) {
+                func(arg);
+            } else {func();}
+            mouseIsClicked = false;
+        }
+    }
+
+    // Draw the button rectangle
+    rect(x, y, size, size, edgeRadius);
+
+    // Set the color for the cross (X) symbol
+    stroke(secondaryColor);
+    strokeWeight(lineWeight);
+    line(x + crossOffset, y + crossOffset, x + size - crossOffset, y + size - crossOffset);
+    line(x + crossOffset, y + size - crossOffset, x + size - crossOffset, y + crossOffset);
 
     pop();
 }
+function deleteGraph1() {
+    numGraphs--;
+    graph1Xdata = graph2Xdata;
+    graph1Ydata = graph2Ydata;
+}
+
+function deleteGraph2() {
+    numGraphs--;
+}
+
+function mouseClicked() {
+    mouseIsClicked = true;
+}
+

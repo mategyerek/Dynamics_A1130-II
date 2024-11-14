@@ -43,7 +43,11 @@ let d_slider;
 let h_slider;
 let g_slider;
 
+// assets
+let lander;
+
 function preload() {
+    lander = loadImage("graphics/lander.png")
 }
 
 function setup() {
@@ -134,13 +138,21 @@ function draw() {
     translate(0, canvas_height); // move origin to bottom left
     scale(pxpm, -pxpm); // set scale to meter, flip y axis
 	
+    push();
+    translate(xg, yg);
+    rotate(theta);
+    scale(1, -1);
+    let d2 = 1.015*d
+    translate(-d2/2, -1.1*h)
+    image(lander, 0, 0, d2, 2.1*h)
+    pop();
 
     // draw lander skeleton
 	push();
-	stroke("red");
-	strokeWeight(0.1);
+	stroke("grey");
+	strokeWeight(0.2);
     translate(xg, yg);
-	point(0, 0);
+	// point(0, 0);
     draw_arrow(0, 0, 0, vy, "green");
     draw_arrow(0, 0, vx, 0, "green");
     draw_arrow(0, 0, vx, vy, "lightgreen");

@@ -1,11 +1,15 @@
-// Everything in SI unless specified otherwise
+// mverything in SI unless specified otherwise
 // Physical variables
 let g; //gravitational acceleration
 let l; //pendulum length
-let E_sys; //system total energy
+let m; //system total energy
 let h; //current height from bottom point
 let theta; //angle from vertical
 let v; //speed of pendulum
+let omega;
+let x_data = [];
+let y_data = [];
+let t = 0;
 
 // Colors
 let sp_color = [20,24,62];
@@ -32,10 +36,11 @@ let in_setup = true;
 // Buttons, sliders
 let g_slider;
 let l_slider;
-let E_slider;
+let m_slider;
 let theta_slider;
 let v_slider;
 let slider_spacing = 30;
+let graph;
 
 let play_pause;
 let reset;
@@ -47,11 +52,11 @@ function setup() {
     createCanvas(canvas_width,canvas_height);
 
     // sliders
-    g_slider = createSlider(1,25,9.8,0.1);
-    l_slider = createSlider(0.5,min(drawing_height/2/pxpm-0.5,drawing_width/2/pxpm-0.5),1,0.1);
-    E_slider = createSlider(0.2,20,1,0.2);
-    theta_slider = createSlider(0,180,5);
-    v_slider = createSlider(0,5,0,0.1);
+    g_slider = createSlider(1, 25, 9.8, 0.1);
+    l_slider = createSlider(0.5, min(drawing_height / 2 / pxpm - 0.5, drawing_width / 2 / pxpm - 0.5), 1.5, 0.1);
+    m_slider = createSlider(0.2, 20, 1, 0.2);
+    theta_slider = createSlider(0, 180, 5);
+    v_slider = createSlider(0, 5, 0, 0.1);
 
     // set up control buttons
     play_pause = createSpan("play_circle");
@@ -66,11 +71,13 @@ function setup() {
     reset.position(drawing_width-button_size-sp_margin, sp_margin);
     play_pause.mousePressed(toggle_loop);
     reset.mousePressed(reset_state);
+    graph = new LinPlot2D(600, 300, 220, 220);
+    initial_state();
 }
 
 function update_sliders(
-    slider_list = [g_slider,l_slider,E_slider,theta_slider,v_slider],
-    label_list = ['g','l','E','theta','v'],
+    slider_list = [g_slider, l_slider, m_slider, theta_slider, v_slider],
+    label_list = ['g','l','m','theta','v'],
     unit_list = ["m/s^2", "m", "J", "deg", "m/s"],
 ) {
     push()
@@ -100,7 +107,14 @@ function reset_state() {
 }
 
 function initial_state() {
-    //todo
+    g = g_slider.value();
+    l = l_slider.value();
+    m = m_slider.value();
+    
+    theta = radians(theta_slider.value());
+    v = v_slider.value();
+    omega = v / l;
+    h = cos(theta) * l;
 }
 
 function draw() {
@@ -112,4 +126,60 @@ function draw() {
     stroke(sp_color);
     rect(drawing_width,0,sp_width,sp_height);
     pop();
+    update_sliders();
+    if (running) {
+        let alpha = g/l * sin(theta);
+        omega += l * alpha * dt;
+        v = l * omega;
+        theta += omega * dt;
+        h = (cos(theta))*l;
+        t += dt;
+        x_data.push(t);
+        y_data.push(h);
+        
+    }
+    else if (in_setup) {
+        initial_state();
+    }
+    
+
+    stroke("white");
+    translate((width - sp_width) / 2, height / 2);
+    scale(pxpm, -pxpm);
+    // point(0,0);
+    push();
+    strokeWeight(.012);
+    let mx = l * sin(theta)
+    let my = l * cos(theta)
+    line(0, 0, mx, my);
+    translate(mx, my);
+    rotate(-theta);
+    strokeWeight(.15);
+    point(0, 0);
+    draw_arrow(0, 0, v/6, 0, "green", 0.02);
+    textSize(0.2);
+    fill("green");
+    noStroke();
+    translate(v/12, 0.18);
+    rotate(theta + PI);
+    text("v", 0, 0);
+    pop();
+
+
+    stroke("red");
+    strokeWeight(0.05);
+    draw_arrow(2, -l, 2, h, "red", 0.02);
+    push();
+    stroke("grey");
+    strokeWeight(0.01);
+    drawingContext.setLineDash([.05, .05])
+    line(2, h, l - (1 - sin(theta)) * l, h);
+    line(2, -l, -2, -l);
+    pop();
+    scale(1, -1);
+    noStroke();
+    fill("red");
+    textSize(0.2);
+    text("h", 2.1, - (h - l) / 2);
+    graph.plot(x_data, y_data);
 }

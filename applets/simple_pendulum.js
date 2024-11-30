@@ -8,7 +8,10 @@ let theta; //angle from vertical
 let v; //speed of pendulum
 let omega;
 let t = 0;
-let dt = 0.01
+let dt = 0.01;
+let E_total;
+let e_kin;
+let e_pot;
 
 // Colors
 let sp_color = [20, 24, 62];
@@ -50,9 +53,9 @@ function setup() {
     createCanvas(canvas_width,canvas_height);
 
     // sliders
-    g_slider = createSlider(1, 25, 9.8, 0.1);
+    g_slider = createSlider(1, 12, 9.8, 0.1);
     l_slider = createSlider(0.5, min(drawing_height / 2 / pxpm - 0.5, drawing_width / 2 / pxpm - 0.5), 1.5, 0.1);
-    m_slider = createSlider(0.2, 20, 1, 0.2);
+    m_slider = createSlider(0.2, 2, 2, 0.1);
     theta_slider = createSlider(0, 180, 5);
     v_slider = createSlider(0, 5, 0, 0.1);
 
@@ -74,7 +77,7 @@ function setup() {
 
 function update_sliders(
     slider_list = [g_slider, l_slider, m_slider, theta_slider, v_slider],
-    label_list = ['g','l','m','theta','v'],
+    label_list = ['g', 'l', 'm', 'theta', 'v'],
     unit_list = ["m/s^2", "m", "kg", "deg", "m/s"],
 ) {
     push()
@@ -112,6 +115,9 @@ function initial_state() {
     v = v_slider.value();
     omega = v / l;
     h = (cos(theta) + 1) * l;
+    E_total = e_kin + e_pot;
+    e_kin = 1/2 * m * v * v;
+    e_pot = m * g * h;
 }
 
 function draw() {
@@ -176,18 +182,27 @@ function draw() {
     fill("red");
     textSize(0.2);
     text("h", 2.1, - (h - 2 * l) / 2);
-    let e_kin = 1/2 * m * v * v;
-    let e_pot = m * g * h;
-    //console.log(e_kin, e_pot);
+    e_kin = 1/2 * m * v * v;
+    e_pot = m * g * h;
     scale(1, -1);
     console.log(e_kin + e_pot, e_kin, e_pot);
-    draw_stacked_bars(4, -2, [e_kin, e_pot], ["green", "red"]);
+    draw_stacked_bars(4, -2.5, [e_kin, e_pot], ["green", "red"], 1, E_total / 30);
 }
 
 function draw_stacked_bars(x, y, bar_list, color_list, w = 0.5, h = 2) {
     push();
     translate(x, y);
-    noStroke();
+    noStroke()
+    push();
+    fill("white");
+    scale(1, -1);
+    text("Energy", -1, -h/2);
+    fill("green");
+    text("Kinetic", 1.2, 0);
+    fill("red");
+    text("Potential", 1.2, -h+0.13);
+    point(0, 0);
+    pop();
     if (bar_list.length != color_list.length) {
         console.warn("bar list and color list must have the same length");
         return;

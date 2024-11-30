@@ -42,3 +42,20 @@ function draw_moment(x, y, r=0.5, color="white", sw=0.05) {
     }
     pop();
 }
+
+function drawCurve(eq, start, end, diff, color="white", sw=0.05) {
+	push();
+	noFill();
+    stroke(color);
+    strokeWeight(sw);
+	out = [];
+	for (i=0; i< (end - start) / diff; i++) {
+		out.push(eq(start + i * diff));
+		if (out.length > 1) {
+			line(out[i].x, out[i].y, out[i-1].x, out[i-1].y);
+			console.log(out[i])
+		}
+	}
+	
+	pop();
+}

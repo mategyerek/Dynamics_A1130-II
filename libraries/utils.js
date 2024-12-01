@@ -59,3 +59,33 @@ function drawCurve(eq, start, end, diff, color="white", sw=0.05) {
 	
 	pop();
 }
+function draw_stacked_bars(x, y, bar_list, color_list, label_list, w = 0.5, h = 2) {
+    push();
+    translate(x, y);
+    noStroke()
+    push();
+    fill("white");
+    scale(1, -1);
+    text("Energy", -1, -h/2);
+    fill(color_list[0]);
+    text(label_list[0], 1.2, 0);
+    fill(color_list[1]);
+    text(label_list[1], 1.2, -h+0.13);
+    point(0, 0);
+    pop();
+    if (bar_list.length != color_list.length) {
+        console.warn("bar list and color list must have the same length");
+        return;
+    }
+    let h_current = 0;
+    let bar_scale = h / bar_list.reduce((a, b) => a + b);
+    //console.log(bar_scale)
+    for (i = 0; i < min(bar_list.length, color_list.length); i++) {
+        fill(color_list[i]);
+        let bar_size = bar_list[i] * bar_scale;
+        rect(0, h_current, w, bar_size);
+        h_current += bar_size;
+    }
+    //rect(0, 0, w, h);
+    pop();
+}

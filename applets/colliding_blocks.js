@@ -13,6 +13,11 @@ let w2;
 // not used yet
 let rho1;
 let rho2;
+let I1;
+let I2;
+let E1;
+let E2;
+let E_total;
 
 // simulation parameters
 let running = false;
@@ -31,8 +36,8 @@ let reset;
 // slider objects
 let m1_slider;
 let m2_slider;
-let x1_slider;
-let x2_slider;
+let x1_0;
+let x2_0;
 let v1_slider;
 let v2_slider;
 let e_slider;
@@ -42,12 +47,12 @@ function preload() {
 
 function setup() {
     // set up sliders and labels
-    m1_slider = createSlider(0.1, 10, 0.1, 0.1)
-    m2_slider = createSlider(0.1, 10, 10, 0.1)
-    x1_slider = createSlider(0, 5, 1, 0.1)
-    x2_slider = createSlider(-5, 0, -1, 0.1)
-    v1_slider = createSlider(-10, 0, -2, 0.1)
-    v2_slider = createSlider(0, 10, 2, 0.1)
+    m1_slider = createSlider(0.1, 5, 2, 0.1)
+    m2_slider = createSlider(0.1, 5, 10, 0.1)
+    x1_0 = 2
+    x2_0 = -2
+    v1_slider = createSlider(-5, 0, -2, 0.1)
+    v2_slider = createSlider(0, 5, 2, 0.1)
     e_slider = createSlider(0, 1, 1, 0.05)
     update_sliders()
     // set up control buttonss
@@ -77,9 +82,14 @@ function draw() {
             if (x1 < x2 && v1 - v2 <= 0) {
                 //console.log(v1, v2, m1, m2)
                 console.log("collision")
-                let temp = -(-m1*v1 + e*m1*v1 - m2*v2 - e*m2*v2)/(m1 + m2)
-                v2 = -(-m1*v1 - e*m1*v1 + e*m1*v2 - m2*v2)/(m1 + m2)
-                v1 = temp
+
+                let temp_v1 = (m1 * v1 + m2 * v2 + e * m2 * abs(v1 - v2)) / (m1 + m2)
+                v2 = (m1 * v1 + m2 * v2 - m1 * temp_v1) / m2
+                v1 = temp_v1
+                //does not satisfy conservation of energy
+                //let temp = (m1*v1 + m2*(e*(v2 - v1) + v2)) / (m1 + m2)
+                //v2 = (m2*v2 + m1*(e*v1 + v1 - e*v2)) / (m1 + m2)
+                //v1 = temp
             }
             
             x1 += v1*dt
@@ -89,7 +99,11 @@ function draw() {
     if (in_setup) {
         initial_state()
     }
-    
+    I1 = m1 * v1
+    I2 = m2 * v2
+    E1 = 0.5 * m1 * v1 * v1
+    E2 = 0.5 * m2 * v2 * v2
+    E_total = E1 + E2
 
     background(0)
     draw_background()
@@ -107,6 +121,16 @@ function draw() {
     stroke("#5CD0B3")
     fill("#49A88F")
     rect(x2, 0, -w2, w2)
+    translate(-3, 9)
+    let I_scale = 0.1;
+    push()
+    textSize(0.3)
+    draw_arrow(0, 0, I1 * I_scale, 0, "#83C167")
+    draw_arrow(I1 * I_scale, -0.5, (I1 + I2) * I_scale, -0.5, "#49A88F")
+    draw_arrow(0, -1, (I1+I2) * I_scale, -1)
+    draw_stacked_bars(4, -5, [E1, E2], ["#83C167", "#49A88F"], ["E1", "E2"], 1, E_total/20)
+    pop()
+    
 }
 
 function toggle_loop() {
@@ -118,8 +142,8 @@ function toggle_loop() {
 function initial_state() {
     m1 = m1_slider.value();
     m2 = m2_slider.value();
-    x1 = x1_slider.value();
-    x2 = x2_slider.value();
+    x1 = x1_0
+    x2 = x2_0
     v1 = v1_slider.value();
     v2 = v2_slider.value();
 
@@ -134,9 +158,9 @@ function reset_state() {
     initial_state()
 }
 function update_sliders(
-    slider_list = [m1_slider, m2_slider, x1_slider, x2_slider, v1_slider, v2_slider, e_slider],
-    label_list = ["m1", "m2", "x1", "x2", "v1", "v2", "e"],
-    unit_list = ["kg", "kg", "m", "m", "m/s", "m/s", ""],
+    slider_list = [m1_slider, m2_slider, v1_slider, v2_slider, e_slider],
+    label_list = ["m1", "m2", "v1", "v2", "e"],
+    unit_list = ["kg", "kg", "m/s", "m/s", ""],
     slider_spacing = 30
 ) {
     push()

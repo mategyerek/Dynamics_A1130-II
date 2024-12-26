@@ -1,4 +1,4 @@
-// mverything in SI unless specified otherwise
+// Everything in SI unless specified otherwise
 // Physical variables
 let g; //gravitational acceleration
 let l; //pendulum length

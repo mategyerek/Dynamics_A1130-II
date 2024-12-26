@@ -2,11 +2,16 @@
 // Physical variables
 let g; //gravitational acceleration
 let l; //pendulum length
-let E_sys; //system total energy
+let m; //system total energy
 let h; //current height from bottom point
 let theta; //angle from vertical
 let v; //speed of pendulum
 let omega;
+let t = 0;
+let dt = 0.01;
+let E_total;
+let e_kin;
+let e_pot;
 
 // Colors
 let sp_color = [20, 24, 62];
@@ -17,7 +22,7 @@ let canvas_width = 900;
 
 let x, y; //canvas position of pendulum in px
 
-let sp_width = 380; //side panel width
+let sp_width = 400; //side panel width
 let sp_height = canvas_height;
 let sp_margin = 10; //side panel margin
 
@@ -25,7 +30,6 @@ let drawing_width = canvas_width - sp_width; //drawing area
 let drawing_height = canvas_height;
 
 let pxpm = 100; //pixels per meter
-let dt = 0.01;
 
 // State
 let running = false;
@@ -34,7 +38,7 @@ let in_setup = true;
 // Buttons, sliders
 let g_slider;
 let l_slider;
-let E_slider;
+let m_slider;
 let theta_slider;
 let v_slider;
 let slider_spacing = 30;
@@ -46,12 +50,12 @@ let button_size = 50;
 let slider_length = 260;
 
 function setup() {
-    createCanvas(canvas_width, canvas_height);
+    createCanvas(canvas_width,canvas_height);
 
     // sliders
-    g_slider = createSlider(1, 25, 9.8, 0.1);
-    l_slider = createSlider(0.5,min(drawing_height / 2 / pxpm - 0.5, drawing_width / 2 / pxpm - 0.5), 1, 0.1);
-    E_slider = createSlider(0.2, 20, 1, 0.2);
+    g_slider = createSlider(1, 12, 9.8, 0.1);
+    l_slider = createSlider(0.5, min(drawing_height / 2 / pxpm - 0.5, drawing_width / 2 / pxpm - 0.5), 1.5, 0.1);
+    m_slider = createSlider(0.2, 2, 2, 0.1);
     theta_slider = createSlider(0, 180, 5);
     v_slider = createSlider(0, 5, 0, 0.1);
 
@@ -72,9 +76,9 @@ function setup() {
 }
 
 function update_sliders(
-    slider_list = [g_slider, l_slider, E_slider, theta_slider, v_slider],
-    label_list = ['g','l','E','theta','v'],
-    unit_list = ["m/s^2", "m", "J", "deg", "m/s"],
+    slider_list = [g_slider, l_slider, m_slider, theta_slider, v_slider],
+    label_list = ['g', 'l', 'm', 'theta', 'v'],
+    unit_list = ["m/s^2", "m", "kg", "deg", "m/s"],
 ) {
     push()
     for ([i, slider] of slider_list.entries()) {
@@ -105,43 +109,82 @@ function reset_state() {
 function initial_state() {
     g = g_slider.value();
     l = l_slider.value();
-    E_sys = E_slider.value();
+    m = m_slider.value();
     
     theta = radians(theta_slider.value());
     v = v_slider.value();
     omega = v / l;
-    h = (1 - sin(theta)) * l;
+    h = (cos(theta) + 1) * l;
+    E_total = e_kin + e_pot;
+    e_kin = 1/2 * m * v * v;
+    e_pot = m * g * h;
 }
 
 function draw() {
     background(0);
+    update_sliders();
+
     push();
     fill(sp_color);
     stroke(sp_color);
-    rect(drawing_width,0,sp_width,sp_height);
+    rect(drawing_width, 0, sp_width,sp_height);
     pop();
     update_sliders();
     if (running) {
-        let alpha = g/l * sin(theta);
-        omega += l * alpha * dt;
+        let alpha = g / l * sin(theta);
+        omega += alpha * dt;
         v = l * omega;
-        theta += omega * dt;
+        theta += 1/2 * alpha * dt * dt + omega * dt;
+        h = (cos(theta) + 1)*l;
+        t += dt;
+        
     }
-    else {
+    else if (in_setup) {
         initial_state();
     }
     
 
-    stroke("green");
-    
+    stroke("white");
     translate((width - sp_width) / 2, height / 2);
     scale(pxpm, -pxpm);
     // point(0,0);
-    strokeWeight(.02);
-    let mx = l * sin(theta)
-    let my = l * cos(theta)
+    push();
+    strokeWeight(.012);
+    let mx = l * sin(theta);
+    let my = l * cos(theta);
     line(0, 0, mx, my);
-    strokeWeight(.1);
-    point(mx, my);
+    translate(mx, my);
+    rotate(-theta);
+    strokeWeight(.15);
+    point(0, 0);
+    draw_arrow(0, 0, v / 6, 0, "green", 0.02);
+    textSize(0.2);
+    fill("green");
+    noStroke();
+    translate(v / 12, 0.18);
+    rotate(theta + PI);
+    text("v", 0, 0);
+    pop();
 
+
+    stroke("red");
+    strokeWeight(0.05);
+    draw_arrow(2, -l, 2, h - l, "red", 0.02);
+    push();
+    stroke("grey");
+    strokeWeight(0.01);
+    drawingContext.setLineDash([.05, .05])
+    line(2, h - l, l - (1 - sin(theta)) * l, h - l);
+    line(2, -l, -2, -l);
+    pop();
+    scale(1, -1);
+    noStroke();
+    fill("red");
+    textSize(0.2);
+    text("h", 2.1, - (h - 2 * l) / 2);
+    e_kin = 1/2 * m * v * v;
+    e_pot = m * g * h;
+    scale(1, -1);
+    console.log(e_kin + e_pot, e_kin, e_pot);
+    draw_stacked_bars(4, -2.5, [e_kin, e_pot], ["green", "red"], ["Kinetic", "Potential"], 1, E_total / 30);
 }

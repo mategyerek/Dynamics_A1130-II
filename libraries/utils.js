@@ -25,6 +25,18 @@ function draw_arrow(x1, y1, x2, y2, color="white", sw=0.05) {
 	)
 	pop();
 }
+function draw_labeled_arrow(x1, y1, x2, y2, label, color="white", sw=0.05, label_offset=[0, 0.1], flip_label=true) {
+    push()
+    translate((x1 + x2) / 2 + label_offset[0], (y1 + y2) / 2 + label_offset[1])
+    if (flip_label) {
+        scale(1, -1)
+    }
+    fill(color)
+    noStroke()
+    text(label, 0, 0)
+    pop()
+    draw_arrow(x1, y1, x2, y2, color, sw)
+}
 
 function draw_moment(x, y, r=0.5, color="white", sw=0.05) {
     if (r==0) { return }
@@ -68,9 +80,9 @@ function draw_stacked_bars(x, y, bar_list, color_list, label_list, w = 0.5, h = 
     scale(1, -1);
     text("Energy", -1, -h/2);
     fill(color_list[0]);
-    text(label_list[0], 1.2, 0);
+    text(label_list[0], w + 0.2, 0);
     fill(color_list[1]);
-    text(label_list[1], 1.2, -h+0.13);
+    text(label_list[1], w + 0.2, -h+0.13);
     point(0, 0);
     pop();
     if (bar_list.length != color_list.length) {

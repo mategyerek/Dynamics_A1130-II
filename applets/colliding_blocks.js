@@ -28,6 +28,8 @@ let dt = 0.01;
 let pxpm = 55;
 let canvas_height = 600;
 let canvas_width = 900;
+let sp_width = 300;
+let h_bottom = 50;
 
 // buttons
 let play_pause;
@@ -51,8 +53,8 @@ function setup() {
     m2_slider = createSlider(0.1, 5, 10, 0.1)
     x1_0 = 2
     x2_0 = -2
-    v1_slider = createSlider(-5, 0, -2, 0.1)
-    v2_slider = createSlider(0, 5, 2, 0.1)
+    v1_slider = createSlider(-5, 0, -3, 0.1)
+    v2_slider = createSlider(0, 5, 3, 0.1)
     e_slider = createSlider(0, 1, 1, 0.05)
     update_sliders()
     // set up control buttonss
@@ -74,7 +76,7 @@ function setup() {
 function draw() {
     
     if (running) {
-        if ((x1 + w1) > (width / 2 / pxpm) || (x2 - w1) < -(width / 2 / pxpm)) {
+        if ((x1 + w1) > ((width-sp_width) / 2 / pxpm) || (x2 - w1) < -((width-sp_width) / 2 / pxpm)) {
             running = false
             play_pause.html("play_circle")
         }
@@ -108,29 +110,29 @@ function draw() {
     background(0)
     draw_background()
     update_sliders()
-    translate(canvas_width/2, canvas_height); // move origin to bottom center
+    translate((canvas_width-sp_width)/2, canvas_height); // move origin to bottom center
     scale(pxpm, -pxpm); // set scale to meter, flip y axis
 
     
     strokeWeight(0.03)
-
+    textSize(0.3)
     stroke("#C9E2AE")
     fill("#83C167")
-    square(x1, 0, w1)
+    square(x1, (h_bottom+1)/pxpm, w1)
 
     stroke("#5CD0B3")
     fill("#49A88F")
-    rect(x2, 0, -w2, w2)
-    translate(-3, 9)
-    let I_scale = 0.1;
-    push()
-    textSize(0.3)
-    draw_arrow(0, 0, I1 * I_scale, 0, "#83C167")
-    draw_arrow(I1 * I_scale, -0.5, (I1 + I2) * I_scale, -0.5, "#49A88F")
-    draw_arrow(0, -1, (I1+I2) * I_scale, -1)
-    draw_stacked_bars(4, -5, [E1, E2], ["#83C167", "#49A88F"], ["E1", "E2"], 1, E_total/20)
-    pop()
+    rect(x2, (h_bottom+1)/pxpm, -w2, w2)
     
+    let I_scale = 0.2;
+    let arrow_spacing = 0.7
+    push()
+    translate(0, 9)
+    draw_labeled_arrow(0, 0, I1 * I_scale, 0, "I1", "#83C167")
+    draw_labeled_arrow(I1 * I_scale, -arrow_spacing, (I1 + I2) * I_scale, -arrow_spacing, "I2", "#49A88F")
+    draw_labeled_arrow(0, -2*arrow_spacing, (I1+I2) * I_scale, -2*arrow_spacing, "I1 + I2", "white", 0.05, [-0.5, 0.1])
+    pop()
+    draw_stacked_bars(7.5, 1, [E1, E2], ["#83C167", "#49A88F"], ["E1", "E2"], 2, E_total/20)
 }
 
 function toggle_loop() {
@@ -176,28 +178,36 @@ function update_sliders(
 }
 function draw_background(n = 1, r1 = -8, r2 = 7) {
     push()
+    textSize(12)
     stroke(100);  // white color for the axis
     strokeWeight(1);
     
     // Draw the main horizontal axis
-    centerX = width / 2
-    let centerY = height / 2;
-    line(0, centerY, width, centerY);
+    let width2 = 600
+    centerX = width2 / 2
+    let h1 = height-h_bottom;
+    line(0, h1, width2, h1);
     fill(100);
-    triangle(width, centerY, width-10, centerY-5, width-10, centerY+5)
+    triangle(width2, h1, width2-10, h1-5, width2-10, h1+5)
     // Add labels every n units along the x-axis
     for (let x = r1; x <= r2; x += n) {
         push()
             translate(centerX, 0)
             strokeWeight(x == 0 ? 2 : 1);
             let tick_len = x == 0 ? 8 : 4
-            line(x*pxpm, centerY - tick_len, x*pxpm, centerY + tick_len);  // small ticks for each label
+            line(x*pxpm, h1 - tick_len, x*pxpm, h1 + tick_len);  // small ticks for each label
             push()
                 noStroke();
                 textAlign(CENTER, TOP);
-                text(x, x*pxpm, centerY + 20);  // display the x-coordinate as a label
+                text(x, x*pxpm, h1 + 20);  // display the x-coordinate as a label
             pop()
         pop()
     }
+    fill("#222222")
+    noStroke()
+    //strokeWeight(102)
+    //point(0,0)
+    rect(width-sp_width,0,sp_width,height)
     pop()
+    
 }

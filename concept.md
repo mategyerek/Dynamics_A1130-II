@@ -18,9 +18,7 @@
 - vector plot of the velocity and acceleration field of a rigid body undergoing planar motion (to show that contrary to the IC, the instantaneous centre of acceleration does not exist).
 
 # Chapter 17: Planar kinetics of a rigid body (Máté)
-- detailed simulation and explanation of problem 17-106 (the two colliding cars).
-- extension of the erratic motion simulator from chapter 12 with rotational input.
-- Simulation of problem 16-71 (spool pulled with rope) in a parametric way.
+- simulation of crate on cart slipping or tipping problem
 
 # Chapter 18: Planar kinetics of a rigid body: work and energy
 - Change the pendulum from chapter 14 to a physical pendulum.

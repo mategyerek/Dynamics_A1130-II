@@ -55,8 +55,8 @@ function setup() {
 	v0_slider = createSlider(0, 5, 3, 0.1);
 	k_slider = createSlider(0, 5, 1, 0.1);
 	m_slider = createSlider(0, 5, 1, 0.1);
-	d_slider = createSlider(0, 10, 8, 0.1);
-	h_slider = createSlider(0, 8, 3, 0.1);
+	d_slider = createSlider(1, 10, 8, 0.1);
+	h_slider = createSlider(1, 5, 3, 0.1);
 	g_slider = createSlider(0, 5, 1, 0.1);
 	update_sliders();
     // set up control buttonss
@@ -144,6 +144,7 @@ function draw() {
     scale(1, -1);
     let d2 = 1.015*d
     translate(-d2/2, -1.1*h)
+    tint(alpha=75)
     image(lander, 0, 0, d2, 2.1*h)
     pop();
 
@@ -153,9 +154,9 @@ function draw() {
 	strokeWeight(0.2);
     translate(xg, yg);
 	// point(0, 0);
-    draw_arrow(0, 0, 0, vy, "green");
-    draw_arrow(0, 0, vx, 0, "green");
-    draw_arrow(0, 0, vx, vy, "lightgreen");
+    //draw_arrow(0, 0, 0, vy, "green");
+    //draw_arrow(0, 0, vx, 0, "green");
+    draw_arrow(-vx, -vy, 0, 0, "lightgreen");
 	rotate(theta);
 	translate(0, -h);
 	point(d/2, 0);
@@ -175,15 +176,15 @@ function initial_state() {
     let MIDDLE = canvas_width/pxpm/2;
     state = 0;
     prev_state = 0;
-	yg = 5;
-    xg = MIDDLE;
-	vy = -v0_slider.value();
-    vx = 0;
 	k = k_slider.value();
 	m = m_slider.value();
 	d = d_slider.value();
 	h = h_slider.value();
 	g = g_slider.value();
+    yg = h*1.1;
+    xg = MIDDLE;
+	vy = -v0_slider.value();
+    vx = 0;
     theta = -0.02;
     beta = atan(h / (d/2))
     R = rms(d/2, h);
